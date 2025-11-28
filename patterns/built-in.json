@@ -1,0 +1,49 @@
+{
+  "version": "1.0.0",
+  "patterns": [
+    {
+      "domain": "knapix.com",
+      "name": "Knapix",
+      "selector": "article h3",
+      "filters": {
+        "exclude": [],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "domain": "amazon.com",
+      "name": "Amazon",
+      "selector": "[data-component-type='s-search-result'] h2 a span",
+      "filters": {
+        "exclude": ["^Sponsored", "^Advertisement"],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "domain": "amazon.fr",
+      "name": "Amazon France",
+      "selector": "[data-component-type='s-search-result'] h2 a span",
+      "filters": {
+        "exclude": ["^Sponsorisé", "^Publicité"],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "domain": "philibert.com",
+      "name": "Philibert",
+      "selector": ".product-name",
+      "filters": {
+        "exclude": [],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    }
+  ]
+}
