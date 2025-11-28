@@ -1,0 +1,17 @@
+# Browser extension artifacts
+*.crx
+*.xpi
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Node modules (if we add build step later)
+node_modules/
