@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Board Game Extractor</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Board Game Extractor</h1>
+    </header>
+
+    <main>
+      <div id="status-section">
+        <div id="site-status" class="status-badge">
+          <span id="status-icon">⏳</span>
+          <span id="status-text">Checking site...</span>
+        </div>
+      </div>
+
+      <div id="action-section">
+        <button id="extract-btn" class="primary-btn" disabled>
+          Extract Board Games
+        </button>
+      </div>
+
+      <div id="stats-section">
+        <p id="stats-text" class="stats">No extractions yet</p>
+      </div>
+
+      <div id="message" class="message hidden"></div>
+    </main>
+
+    <footer>
+      <div class="footer-links">
+        <button id="suggest-btn" class="link-btn">Suggest a Site</button>
+        <button id="settings-btn" class="link-btn">Settings</button>
+      </div>
+      <div class="version">v1.0.0</div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
