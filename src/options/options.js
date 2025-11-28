@@ -175,4 +175,200 @@ function createPatternCard(pattern, isCustom, index) {
   return card;
 }
 
-// Continue in next step...
+// Modal management
+function openModal(index = null) {
+  const modal = document.getElementById('pattern-modal');
+  const title = document.getElementById('modal-title');
+  const form = document.getElementById('pattern-form');
+
+  editingIndex = index;
+
+  if (index !== null) {
+    // Edit mode
+    title.textContent = 'Edit Pattern';
+    const pattern = customPatterns[index];
+    populateForm(pattern);
+  } else {
+    // Add mode
+    title.textContent = 'Add Pattern';
+    form.reset();
+    document.getElementById('trim-input').checked = true;
+    document.getElementById('dedupe-input').checked = true;
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function closeModal() {
+  const modal = document.getElementById('pattern-modal');
+  modal.classList.add('hidden');
+  editingIndex = null;
+}
+
+// Populate form with pattern data
+function populateForm(pattern) {
+  document.getElementById('domain-input').value = pattern.domain;
+  document.getElementById('name-input').value = pattern.name;
+  document.getElementById('selector-input').value = pattern.selector;
+
+  if (pattern.filters) {
+    if (pattern.filters.exclude) {
+      document.getElementById('exclude-input').value = pattern.filters.exclude.join(', ');
+    }
+    if (pattern.filters.include) {
+      document.getElementById('include-input').value = pattern.filters.include.join(', ');
+    }
+    document.getElementById('trim-input').checked = pattern.filters.trim !== false;
+    document.getElementById('dedupe-input').checked = pattern.filters.deduplicate !== false;
+  }
+}
+
+// Handle form submission
+async function handleFormSubmit(e) {
+  e.preventDefault();
+
+  const pattern = {
+    domain: document.getElementById('domain-input').value.trim(),
+    name: document.getElementById('name-input').value.trim(),
+    selector: document.getElementById('selector-input').value.trim(),
+    filters: {
+      exclude: parseCommaSeparated(document.getElementById('exclude-input').value),
+      include: parseCommaSeparated(document.getElementById('include-input').value),
+      trim: document.getElementById('trim-input').checked,
+      deduplicate: document.getElementById('dedupe-input').checked
+    }
+  };
+
+  // Set include to null if empty
+  if (pattern.filters.include.length === 0) {
+    pattern.filters.include = null;
+  }
+
+  if (editingIndex !== null) {
+    // Update existing
+    customPatterns[editingIndex] = pattern;
+  } else {
+    // Add new
+    customPatterns.push(pattern);
+  }
+
+  // Save to storage
+  await saveCustomPatterns();
+
+  // Update UI
+  renderCustomPatterns();
+  closeModal();
+
+  // Notify background to reload
+  chrome.runtime.sendMessage({ action: 'reloadPatterns' });
+}
+
+// Edit pattern
+function editPattern(index) {
+  openModal(index);
+}
+
+// Delete pattern
+async function deletePattern(index) {
+  if (!confirm('Are you sure you want to delete this pattern?')) {
+    return;
+  }
+
+  customPatterns.splice(index, 1);
+  await saveCustomPatterns();
+  renderCustomPatterns();
+
+  // Notify background to reload
+  chrome.runtime.sendMessage({ action: 'reloadPatterns' });
+}
+
+// Save custom patterns to storage
+async function saveCustomPatterns() {
+  try {
+    await chrome.storage.local.set({ customPatterns });
+  } catch (error) {
+    console.error('Error saving patterns:', error);
+    alert('Failed to save patterns');
+  }
+}
+
+// Handle import
+async function handleImport() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json';
+
+  input.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const text = await file.text();
+      const imported = JSON.parse(text);
+
+      if (!Array.isArray(imported)) {
+        alert('Invalid format: JSON must be an array of patterns');
+        return;
+      }
+
+      // Validate patterns
+      for (const pattern of imported) {
+        if (!pattern.domain || !pattern.name || !pattern.selector) {
+          alert('Invalid pattern format in imported file');
+          return;
+        }
+      }
+
+      // Merge with existing (don't overwrite)
+      customPatterns = [...customPatterns, ...imported];
+      await saveCustomPatterns();
+      renderCustomPatterns();
+
+      chrome.runtime.sendMessage({ action: 'reloadPatterns' });
+      alert(`Imported ${imported.length} patterns`);
+    } catch (error) {
+      console.error('Import error:', error);
+      alert('Failed to import patterns: ' + error.message);
+    }
+  });
+
+  input.click();
+}
+
+// Handle export
+function handleExport() {
+  if (customPatterns.length === 0) {
+    alert('No custom patterns to export');
+    return;
+  }
+
+  const json = JSON.stringify(customPatterns, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'bgm-extractor-patterns.json';
+  a.click();
+
+  URL.revokeObjectURL(url);
+}
+
+// Handle search
+function handleSearch(e) {
+  const query = e.target.value;
+  renderSupportedPatterns(query);
+}
+
+// Parse comma-separated string to array
+function parseCommaSeparated(str) {
+  if (!str || !str.trim()) return [];
+  return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
