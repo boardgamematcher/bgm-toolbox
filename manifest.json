@@ -9,7 +9,14 @@
     "storage"
   ],
   "background": {
-    "service_worker": "src/background/service-worker.js"
+    "service_worker": "src/background/service-worker.js",
+    "scripts": ["src/background/service-worker.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "boardgame-extractor@example.com",
+      "strict_min_version": "109.0"
+    }
   },
   "action": {
     "default_popup": "src/popup/popup.html",
