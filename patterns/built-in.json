@@ -1,10 +1,17 @@
 {
-  "version": "1.0.0",
-  "patterns": [
+  "$schema": "./schema.json",
+  "version": "1.1.0",
+  "profiles": [
     {
-      "domain": "knapix.com",
-      "name": "Knapix",
-      "selector": "a[href^=\"/r/\"] h3",
+      "name": "Philibert Flash Sales",
+      "domain": "philibertnet.com",
+      "url_pattern": "philibertnet\\.com/.*/flash-sales",
+      "card_selector": ".s_title_block",
+      "selector": "a",
+      "image_selector": "img",
+      "price_selector": ".price",
+      "sale_price_selector": ".old-price",
+      "threshold": 0.8,
       "filters": {
         "exclude": [],
         "include": null,
@@ -13,31 +20,82 @@
       }
     },
     {
-      "domain": "amazon.com",
-      "name": "Amazon",
-      "selector": "[data-component-type='s-search-result'] h2 a span",
-      "filters": {
-        "exclude": ["^Sponsored", "^Advertisement"],
-        "include": null,
-        "trim": true,
-        "deduplicate": true
-      }
-    },
-    {
-      "domain": "amazon.fr",
-      "name": "Amazon France",
-      "selector": "[data-component-type='s-search-result'] h2 a span",
-      "filters": {
-        "exclude": ["^Sponsorisé", "^Publicité"],
-        "include": null,
-        "trim": true,
-        "deduplicate": true
-      }
-    },
-    {
+      "name": "Philibert Promotions",
       "domain": "philibertnet.com",
-      "name": "Philibert",
-      "selector": "a[href*='/fr/'][href*='.html'][title]",
+      "url_pattern": "philibertnet\\.com/.*/promotions",
+      "card_selector": ".s_title_block",
+      "selector": "a",
+      "image_selector": "img",
+      "price_selector": ".price",
+      "sale_price_selector": ".old-price",
+      "threshold": 0.8,
+      "filters": {
+        "exclude": [],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "name": "Philibert Homepage",
+      "domain": "philibertnet.com",
+      "url_pattern": "philibertnet\\.com/(?:fr|en|de|es|it)/?$",
+      "card_selector": ".s_title_block",
+      "selector": "a",
+      "image_selector": "img",
+      "price_selector": ".price",
+      "sale_price_selector": ".old-price",
+      "threshold": 0.8,
+      "filters": {
+        "exclude": [],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "name": "Amazon Search Results",
+      "domain": "amazon.com",
+      "url_pattern": "amazon\\.(com|fr|de|co\\.uk|es|it)/s\\?",
+      "card_selector": "div[data-component-type=\"s-search-result\"]",
+      "selector": "h2 span",
+      "image_selector": "img.s-image",
+      "price_selector": ".a-price .a-offscreen",
+      "sale_price_selector": ".a-price[data-a-strike] .a-offscreen",
+      "threshold": 0.8,
+      "filters": {
+        "exclude": ["^Sponsored", "^Sponsorisé", "^Advertisement", "^Publicité"],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "name": "Amazon Best Sellers / Category",
+      "domain": "amazon.com",
+      "url_pattern": "amazon\\.(com|fr|de|co\\.uk|es|it)/(gp/|Best-Sellers|b[/\\?])",
+      "card_selector": ".p13n-sc-uncoverable-faceout, .a-section",
+      "selector": "h2 span, .p13n-sc-truncate-desktop-type2",
+      "image_selector": "img",
+      "price_selector": ".a-price .a-offscreen",
+      "threshold": 0.8,
+      "filters": {
+        "exclude": ["^Sponsored", "^Sponsorisé"],
+        "include": null,
+        "trim": true,
+        "deduplicate": true
+      }
+    },
+    {
+      "name": "Knapix",
+      "domain": "knapix.com",
+      "url_pattern": "knapix\\.com",
+      "card_selector": "a[href^=\"/r/\"]",
+      "selector": "h3",
+      "image_selector": "img",
+      "price_selector": ".prix-jeu",
+      "sale_price_selector": ".pourcentage",
+      "threshold": 0.8,
       "filters": {
         "exclude": [],
         "include": null,
