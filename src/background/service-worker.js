@@ -109,12 +109,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  if (message.action === 'copyToClipboard') {
-    copyToClipboard(message.text);
-    sendResponse({ success: true });
-    return false;
-  }
-
   if (message.action === 'updateStats') {
     updateStats(message.stats);
     sendResponse({ success: true });
@@ -135,13 +129,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Async response
   }
 });
-
-// Copy text to clipboard (no-op in service worker, kept for future use)
-async function copyToClipboard(text) {
-  // navigator.clipboard is not available in MV3 service workers.
-  // Clipboard writes now happen from the popup context if needed.
-  console.log('copyToClipboard called, text length:', text.length);
-}
 
 // Update extraction stats
 async function updateStats(stats) {

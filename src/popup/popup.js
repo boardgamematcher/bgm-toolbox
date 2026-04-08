@@ -205,10 +205,10 @@ async function handleExtract() {
         return;
       }
 
-      const text = games.join('\n');
-
-      // Open BGM extract page with the games
-      const bgmUrl = BGM_BASE_URL + '/extract?text=' + encodeURIComponent(text);
+      // Send structured data to BGM extract page via URL hash
+      const payload = JSON.stringify({ source: currentDomain, games });
+      const encoded = btoa(unescape(encodeURIComponent(payload)));
+      const bgmUrl = BGM_BASE_URL + '/extract#ext=' + encoded;
       chrome.tabs.create({ url: bgmUrl });
 
       // Update stats
