@@ -35,9 +35,9 @@
       }
     },
     {
-      "domain": "philibert.com",
+      "domain": "philibertnet.com",
       "name": "Philibert",
-      "selector": ".product-name",
+      "selector": "a[href*='/fr/'][href*='.html'][title]",
       "filters": {
         "exclude": [],
         "include": null,

@@ -1,3 +1,34 @@
+/* ── BGM Design System Tokens ── */
+:root {
+  --bg-base: #14181c;
+  --bg-surface: #1b2028;
+  --bg-elevated: #242c34;
+  --bg-hover: #2c353e;
+
+  --text-primary: #e1e3e5;
+  --text-secondary: #99aabb;
+  --text-muted: #667788;
+
+  --amber: #f5a623;
+  --amber-dim: #c4872a;
+  --amber-bright: #ffc64d;
+  --amber-glow: rgba(245, 166, 35, 0.12);
+  --amber-on-btn: #14181c;
+
+  --green: #00c030;
+  --red: #e74c3c;
+  --blue: #5b9bd5;
+
+  --border: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.12);
+
+  --radius: 4px;
+  --radius-md: 6px;
+
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Reset & Base ── */
 * {
   margin: 0;
   padding: 0;
@@ -5,35 +36,38 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
-  color: #333;
-  background: #f5f5f5;
+  color: var(--text-primary);
+  background: var(--bg-base);
 }
 
 .container {
   max-width: 900px;
   margin: 0 auto;
-  background: white;
+  background: var(--bg-base);
   min-height: 100vh;
 }
 
 header {
-  background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-  color: white;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-primary);
   padding: 24px;
   text-align: center;
 }
 
 header h1 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 }
 
+/* ── Tabs ── */
 .tabs {
   display: flex;
-  border-bottom: 2px solid #e0e0e0;
-  background: white;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-surface);
   position: sticky;
   top: 0;
   z-index: 10;
@@ -41,25 +75,28 @@ header h1 {
 
 .tab-btn {
   flex: 1;
-  padding: 16px;
+  padding: 14px;
   background: none;
   border: none;
-  border-bottom: 3px solid transparent;
-  font-size: 14px;
-  font-weight: 500;
-  color: #666;
+  border-bottom: 2px solid transparent;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .tab-btn:hover {
-  background: #f5f5f5;
-  color: #333;
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
 }
 
 .tab-btn.active {
-  color: #4CAF50;
-  border-bottom-color: #4CAF50;
+  color: var(--amber);
+  border-bottom-color: var(--amber);
 }
 
 main {
@@ -74,33 +111,50 @@ main {
   display: block;
 }
 
+/* ── Section header ── */
 .section-header {
   margin-bottom: 24px;
 }
 
 .section-header h2 {
-  font-size: 20px;
-  font-weight: 600;
-  margin-bottom: 8px;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 6px;
 }
 
 .subtitle {
-  color: #666;
-  font-size: 14px;
+  color: var(--text-muted);
+  font-size: 13px;
 }
 
+/* ── Search ── */
 .search-box {
   margin-bottom: 16px;
 }
 
 .search-box input {
   width: 100%;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  font-size: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
+  transition: border-color var(--transition-fast);
 }
 
+.search-box input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-box input:focus {
+  outline: none;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px var(--amber-glow);
+}
+
+/* ── Actions ── */
 .actions {
   display: flex;
   gap: 12px;
@@ -108,48 +162,57 @@ main {
 }
 
 .primary-btn {
-  padding: 10px 20px;
-  background: #4CAF50;
-  color: white;
+  padding: 9px 20px;
+  background: var(--amber);
+  color: var(--amber-on-btn);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
 
 .primary-btn:hover {
-  background: #45a049;
+  background: var(--amber-bright);
 }
 
 .secondary-btn {
-  padding: 10px 20px;
-  background: white;
-  color: #4CAF50;
-  border: 1px solid #4CAF50;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  padding: 9px 20px;
+  background: transparent;
+  color: var(--amber);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
 
 .secondary-btn:hover {
-  background: #f1f8f4;
+  background: var(--amber-glow);
+  border-color: var(--amber);
 }
 
+/* ── Pattern cards ── */
 .pattern-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pattern-card {
   padding: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  transition: border-color var(--transition-fast);
+}
+
+.pattern-card:hover {
+  border-color: var(--border-hover);
 }
 
 .pattern-header {
@@ -160,46 +223,49 @@ main {
 }
 
 .pattern-info h3 {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 3px;
 }
 
 .pattern-domain {
-  color: #666;
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 12px;
 }
 
 .pattern-actions {
   display: flex;
-  gap: 8px;
+  gap: 6px;
 }
 
 .icon-btn {
-  padding: 6px 12px;
+  padding: 5px 10px;
   background: none;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
   font-size: 12px;
+  color: var(--text-secondary);
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--transition-fast);
+  font-family: inherit;
 }
 
 .icon-btn:hover {
-  background: #f5f5f5;
-  border-color: #bbb;
+  background: var(--bg-elevated);
+  border-color: var(--text-muted);
+  color: var(--text-primary);
 }
 
 .icon-btn.delete:hover {
-  background: #ffebee;
-  border-color: #ef5350;
-  color: #c62828;
+  background: rgba(231, 76, 60, 0.12);
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .pattern-details {
   display: grid;
-  gap: 8px;
-  font-size: 13px;
+  gap: 6px;
+  font-size: 12px;
 }
 
 .pattern-row {
@@ -210,20 +276,20 @@ main {
 .pattern-label {
   font-weight: 600;
   min-width: 80px;
-  color: #666;
+  color: var(--text-muted);
 }
 
 .pattern-value {
   flex: 1;
   font-family: 'Courier New', monospace;
-  color: #333;
+  color: var(--text-secondary);
   word-break: break-all;
 }
 
 .empty-state {
   text-align: center;
   padding: 48px 24px;
-  color: #999;
+  color: var(--text-muted);
 }
 
 .empty-state p {
@@ -232,40 +298,45 @@ main {
 
 .hint {
   font-size: 12px;
-  color: #999;
+  color: var(--text-muted);
 }
 
+/* ── Help ── */
 .help-section {
   margin-bottom: 32px;
 }
 
 .help-section h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 12px;
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: var(--text-primary);
 }
 
 .help-section p {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
   line-height: 1.6;
+  color: var(--text-secondary);
 }
 
 .help-section ul,
 .help-section ol {
   margin-left: 24px;
   line-height: 1.8;
+  color: var(--text-secondary);
 }
 
 .help-section code {
-  background: #f5f5f5;
+  background: var(--bg-elevated);
   padding: 2px 6px;
-  border-radius: 4px;
+  border-radius: var(--radius);
   font-family: 'Courier New', monospace;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--amber);
 }
 
 .help-section a {
-  color: #4CAF50;
+  color: var(--amber);
   text-decoration: none;
 }
 
@@ -273,14 +344,14 @@ main {
   text-decoration: underline;
 }
 
-/* Modal */
+/* ── Modal ── */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -292,8 +363,9 @@ main {
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   width: 90%;
   max-width: 500px;
   max-height: 90vh;
@@ -305,19 +377,19 @@ main {
   justify-content: space-between;
   align-items: center;
   padding: 20px;
-  border-bottom: 1px solid #e0e0e0;
+  border-bottom: 1px solid var(--border);
 }
 
 .modal-header h2 {
-  font-size: 18px;
-  font-weight: 600;
+  font-size: 16px;
+  font-weight: 700;
 }
 
 .close-btn {
   background: none;
   border: none;
-  font-size: 24px;
-  color: #999;
+  font-size: 22px;
+  color: var(--text-muted);
   cursor: pointer;
   padding: 0;
   width: 30px;
@@ -325,10 +397,11 @@ main {
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: color var(--transition-fast);
 }
 
 .close-btn:hover {
-  color: #333;
+  color: var(--text-primary);
 }
 
 #pattern-form {
@@ -343,27 +416,32 @@ main {
   display: block;
   font-weight: 600;
   margin-bottom: 6px;
-  font-size: 13px;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 .form-group input[type="text"] {
   width: 100%;
-  padding: 10px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius);
+  font-size: 13px;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  font-family: inherit;
 }
 
 .form-group input[type="text"]:focus {
   outline: none;
-  border-color: #4CAF50;
+  border-color: var(--amber);
+  box-shadow: 0 0 0 2px var(--amber-glow);
 }
 
 .form-group .hint {
   display: block;
   margin-top: 4px;
-  font-size: 12px;
-  color: #999;
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .checkbox-group {
@@ -377,12 +455,14 @@ main {
   gap: 8px;
   font-weight: normal;
   cursor: pointer;
+  color: var(--text-secondary);
 }
 
 .checkbox-group input[type="checkbox"] {
   width: 16px;
   height: 16px;
   cursor: pointer;
+  accent-color: var(--amber);
 }
 
 .modal-actions {
@@ -391,5 +471,5 @@ main {
   justify-content: flex-end;
   margin-top: 24px;
   padding-top: 20px;
-  border-top: 1px solid #e0e0e0;
+  border-top: 1px solid var(--border);
 }
