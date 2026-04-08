@@ -191,6 +191,11 @@ function sendExtractMessage(tabId, pattern) {
 }
 
 async function handleExtract() {
+  if (!currentPattern) {
+    showMessage('No pattern available', 'error');
+    return;
+  }
+
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.url) {
@@ -198,20 +203,58 @@ async function handleExtract() {
       return;
     }
 
-    // Open BGM extract page with the current URL — let the website handle extraction
-    const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
-    chrome.tabs.create({ url: bgmUrl });
+    // Inject content script and extract structured data from the page
+    let response = await sendExtractMessage(tab.id, currentPattern);
+    if (response.error) {
+      try {
+        await injectContentScript(tab.id);
+        response = await sendExtractMessage(tab.id, currentPattern);
+      } catch (_e) {
+        // Fall back to URL-based extraction on the website
+        const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
+        chrome.tabs.create({ url: bgmUrl });
+        window.close();
+        return;
+      }
+    }
+
+    if (response.error || !response.success || !response.games?.length) {
+      // Fall back to URL-based extraction
+      const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
+      chrome.tabs.create({ url: bgmUrl });
+      window.close();
+      return;
+    }
+
+    const games = response.games;
+
+    // POST structured data to BGM and open results page
+    const payload = { source: currentDomain, url: tab.url, games };
+    const postResponse = await fetch(BGM_BASE_URL + '/api/extract/extension', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify(payload),
+    });
+
+    if (postResponse.ok) {
+      const result = await postResponse.json();
+      chrome.tabs.create({ url: BGM_BASE_URL + '/extract?job=' + result.job_id });
+    } else {
+      // Fall back to URL-based extraction
+      const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
+      chrome.tabs.create({ url: bgmUrl });
+    }
 
     // Update stats
     const stats = {
       lastExtraction: {
         domain: currentDomain,
-        count: 0,
+        count: games.length,
         timestamp: Date.now(),
       },
     };
     await chrome.runtime.sendMessage({ action: 'updateStats', stats });
-
     updateStatsDisplay(stats);
     window.close();
   } catch (error) {
