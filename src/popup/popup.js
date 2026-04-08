@@ -1,5 +1,5 @@
 // BGM Toolbox — Popup controller
-const BGM_BASE_URL = 'https://localhost:8000'; // TODO: change to https://boardgamematcher.com for production
+const BGM_BASE_URL = 'https://boardgamematcher.com';
 let currentDomain = null;
 let currentPattern = null;
 let currentUser = null;
