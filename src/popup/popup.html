@@ -1,44 +1,98 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Board Game Extractor</title>
+  <title>BGM Toolbox</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="container">
-    <header>
-      <h1>Board Game Extractor</h1>
+
+  <div class="popup" id="popup">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <div class="logo">B</div>
+        <div class="name">Board<span>Game</span>Matcher</div>
+      </div>
+      <div class="header-right">
+        <button id="theme-toggle-btn" class="icon-btn" title="Toggle theme">
+          <span id="theme-icon">&#9790;</span>
+        </button>
+        <button id="settings-btn" class="icon-btn" title="Settings">&#9881;</button>
+      </div>
     </header>
 
-    <main>
-      <div id="status-section">
-        <div id="site-status" class="status-badge">
-          <span id="status-icon">⏳</span>
-          <span id="status-text">Checking site...</span>
+    <!-- Cards container -->
+    <div class="cards" id="cards">
+
+      <!-- Extraction card (shown when site is supported) -->
+      <div class="card" id="card-extract" style="display:none;">
+        <div class="context-pill shop-ctx" id="context-pill">
+          <span class="dot"></span>
+          <span id="detected-site">Site detected</span>
         </div>
+        <div class="card-top">
+          <div class="card-title" id="extract-title">Board games on this page</div>
+        </div>
+        <div class="extract-row">
+          <button class="btn-primary" id="extract-btn">Extract All</button>
+        </div>
+        <!-- Compare prices CTA — hidden until price scraping is implemented
+        <a class="bgm-link" href="https://boardgamematcher.com" target="_blank" rel="noopener">
+          <div>
+            <span class="link-text">Compare prices on BoardGameMatcher</span>
+            <span class="link-sub">See price history across shops</span>
+          </div>
+          <span class="arrow">&rarr;</span>
+        </a>
+        -->
       </div>
 
-      <div id="action-section">
-        <button id="extract-btn" class="primary-btn" disabled>
-          Extract Board Games
-        </button>
+      <!-- Unsupported site card -->
+      <div class="card" id="card-unsupported" style="display:none;">
+        <div class="card-top">
+          <div class="card-title">No games detected on this page</div>
+        </div>
+        <p class="card-body-text" id="unsupported-text">Open a supported board game shop to extract games.</p>
       </div>
 
-      <div id="stats-section">
-        <p id="stats-text" class="stats">No extractions yet</p>
+      <!-- Quick wishlist card -->
+      <div class="card" id="card-wishlist">
+        <div class="card-top">
+          <div class="card-title">&#9825; Quick add to wishlist</div>
+        </div>
+        <div class="quick-add-row">
+          <input type="text" id="wishlist-input" placeholder="Type a game name..." disabled>
+          <button class="btn-primary btn-sm" id="wishlist-btn" disabled>+ Wishlist</button>
+        </div>
+        <a class="bgm-link" href="https://boardgamematcher.com/wishlist" target="_blank" rel="noopener" style="margin-top: 8px;">
+          <div>
+            <span class="link-text">View your full wishlist</span>
+            <span class="link-sub">Manage your wishlist on BGM</span>
+          </div>
+          <span class="arrow">&rarr;</span>
+        </a>
       </div>
 
-      <div id="message" class="message hidden"></div>
-    </main>
-
-    <footer>
-      <div class="footer-links">
-        <button id="suggest-btn" class="link-btn">Suggest a Site</button>
-        <button id="settings-btn" class="link-btn">Settings</button>
+      <!-- Stats card -->
+      <div class="card" id="card-stats">
+        <div class="card-top">
+          <div class="card-title">Last extraction</div>
+        </div>
+        <p class="card-body-text" id="stats-text">No extractions yet</p>
       </div>
-      <div class="version">v1.0.0</div>
-    </footer>
+
+    </div>
+
+    <!-- Message toast -->
+    <div id="message" class="message hidden"></div>
+
+    <!-- Bottom banner -->
+    <a class="powered-banner" href="https://boardgamematcher.com" target="_blank" rel="noopener">
+      <div class="pb-logo">B</div>
+      <div class="pb-text">Open BoardGameMatcher.com</div>
+      <span class="pb-arrow">&rarr;</span>
+    </a>
   </div>
 
   <script src="popup.js"></script>

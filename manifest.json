@@ -1,29 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "Board Game Extractor",
-  "version": "1.0.0",
-  "description": "Extract board game names from websites with configurable patterns",
+  "name": "BGM Toolbox — BoardGameMatcher Companion",
+  "version": "0.0.2",
+  "description": "Your board game companion: extract games from shops, log plays, sync collections — all connected to BoardGameMatcher.com",
   "permissions": [
     "activeTab",
     "clipboardWrite",
-    "storage"
+    "storage",
+    "scripting"
   ],
   "background": {
-    "service_worker": "src/background/service-worker.js",
-    "scripts": ["src/background/service-worker.js"]
+    "service_worker": "src/background/service-worker.js"
   },
   "browser_specific_settings": {
     "gecko": {
-      "id": "boardgame-extractor@example.com",
+      "id": "bgm-toolbox@boardgamematcher.com",
       "strict_min_version": "109.0"
     }
   },
   "action": {
     "default_popup": "src/popup/popup.html",
     "default_icon": {
-      "16": "icons/icon16.svg",
-      "48": "icons/icon48.svg",
-      "128": "icons/icon128.svg"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
   },
   "content_scripts": [{
@@ -32,9 +32,9 @@
   }],
   "options_page": "src/options/options.html",
   "icons": {
-    "16": "icons/icon16.svg",
-    "48": "icons/icon48.svg",
-    "128": "icons/icon128.svg"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "web_accessible_resources": [{
     "resources": ["patterns/built-in.json"],

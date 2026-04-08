@@ -1,9 +1,11 @@
-// Popup controller
+// BGM Toolbox — Popup controller
+const BGM_BASE_URL = 'http://localhost:8000'; // TODO: change to https://boardgamematcher.com for production
 let currentDomain = null;
 let currentPattern = null;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
+  loadTheme();
   await checkSiteSupport();
   await loadStats();
   setupEventListeners();
@@ -12,25 +14,52 @@ document.addEventListener('DOMContentLoaded', async () => {
 // Setup event listeners
 function setupEventListeners() {
   document.getElementById('extract-btn').addEventListener('click', handleExtract);
-  document.getElementById('suggest-btn').addEventListener('click', handleSuggest);
   document.getElementById('settings-btn').addEventListener('click', handleSettings);
+  document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
 }
 
-// Check if current site is supported
+// ── Theme ──
+
+function loadTheme() {
+  chrome.storage.local.get('theme', (data) => {
+    const theme = data.theme || 'dark';
+    applyTheme(theme);
+  });
+}
+
+function toggleTheme() {
+  const popup = document.getElementById('popup');
+  const isLight = popup.classList.contains('light');
+  const newTheme = isLight ? 'dark' : 'light';
+  chrome.storage.local.set({ theme: newTheme });
+  applyTheme(newTheme);
+}
+
+function applyTheme(theme) {
+  const popup = document.getElementById('popup');
+  const icon = document.getElementById('theme-icon');
+  if (theme === 'light') {
+    popup.classList.add('light');
+    icon.innerHTML = '&#9788;'; // sun
+  } else {
+    popup.classList.remove('light');
+    icon.innerHTML = '&#9790;'; // moon
+  }
+}
+
+// ── Site support ──
+
 async function checkSiteSupport() {
   try {
-    // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     if (!tab || !tab.url) {
       setUnsupported('No active tab');
       return;
     }
 
-    // Extract domain from URL
     const url = new URL(tab.url);
     currentDomain = url.hostname;
 
-    // Check with background
     chrome.runtime.sendMessage(
       { action: 'checkSiteSupport', domain: currentDomain },
       (response) => {
@@ -38,7 +67,7 @@ async function checkSiteSupport() {
           currentPattern = response.pattern;
           setSupported(response.pattern.name);
         } else {
-          setUnsupported('Site not supported');
+          setUnsupported(currentDomain);
         }
       }
     );
@@ -48,33 +77,45 @@ async function checkSiteSupport() {
   }
 }
 
-// Set UI to supported state
 function setSupported(siteName) {
-  const statusBadge = document.getElementById('site-status');
-  const statusIcon = document.getElementById('status-icon');
-  const statusText = document.getElementById('status-text');
-  const extractBtn = document.getElementById('extract-btn');
-
-  statusBadge.className = 'status-badge supported';
-  statusIcon.textContent = '✓';
-  statusText.textContent = `Supported Site: ${siteName}`;
-  extractBtn.disabled = false;
+  document.getElementById('card-extract').style.display = '';
+  document.getElementById('card-unsupported').style.display = 'none';
+  document.getElementById('detected-site').textContent = siteName + ' detected';
+  document.getElementById('extract-btn').disabled = false;
 }
 
-// Set UI to unsupported state
-function setUnsupported(reason) {
-  const statusBadge = document.getElementById('site-status');
-  const statusIcon = document.getElementById('status-icon');
-  const statusText = document.getElementById('status-text');
-  const extractBtn = document.getElementById('extract-btn');
-
-  statusBadge.className = 'status-badge unsupported';
-  statusIcon.textContent = '✗';
-  statusText.textContent = reason;
-  extractBtn.disabled = true;
+function setUnsupported(domain) {
+  document.getElementById('card-extract').style.display = 'none';
+  document.getElementById('card-unsupported').style.display = '';
+  document.getElementById('unsupported-text').textContent =
+    domain ? `${domain} is not a supported site yet.` : 'Open a supported board game shop to extract games.';
 }
 
-// Handle extract button click
+// ── Extraction ──
+
+async function injectContentScript(tabId) {
+  await chrome.scripting.executeScript({
+    target: { tabId },
+    files: ['src/lib/pattern-matcher.js', 'src/content/content-script.js']
+  });
+}
+
+function sendExtractMessage(tabId, pattern) {
+  return new Promise((resolve) => {
+    chrome.tabs.sendMessage(
+      tabId,
+      { action: 'extractGames', pattern },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          resolve({ error: chrome.runtime.lastError.message });
+        } else {
+          resolve(response);
+        }
+      }
+    );
+  });
+}
+
 async function handleExtract() {
   if (!currentPattern) {
     showMessage('No pattern available', 'error');
@@ -82,62 +123,63 @@ async function handleExtract() {
   }
 
   try {
-    // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
 
-    // Send message to content script
-    chrome.tabs.sendMessage(
-      tab.id,
-      { action: 'extractGames', pattern: currentPattern },
-      async (response) => {
-        if (chrome.runtime.lastError) {
-          showMessage('Error: ' + chrome.runtime.lastError.message, 'error');
-          return;
-        }
+    let response = await sendExtractMessage(tab.id, currentPattern);
 
-        if (response && response.success) {
-          const games = response.games;
-
-          if (games.length === 0) {
-            showMessage('No board games found', 'error');
-            return;
-          }
-
-          // Copy to clipboard
-          const text = games.join('\n');
-          await chrome.runtime.sendMessage({
-            action: 'copyToClipboard',
-            text: text
-          });
-
-          // Update stats
-          const stats = {
-            lastExtraction: {
-              domain: currentDomain,
-              count: games.length,
-              timestamp: Date.now()
-            }
-          };
-          await chrome.runtime.sendMessage({
-            action: 'updateStats',
-            stats: stats
-          });
-
-          // Update UI
-          showMessage(`Copied ${games.length} games to clipboard!`, 'success');
-          updateStatsDisplay(stats);
-        } else {
-          showMessage('Failed to extract games', 'error');
-        }
+    // If content script not injected, inject and retry
+    if (response.error) {
+      try {
+        await injectContentScript(tab.id);
+        response = await sendExtractMessage(tab.id, currentPattern);
+      } catch (e) {
+        showMessage('Cannot access this page', 'error');
+        return;
       }
-    );
+    }
+
+    if (response.error) {
+      showMessage('Error: ' + response.error, 'error');
+      return;
+    }
+
+    if (response && response.success) {
+      const games = response.games;
+
+      if (games.length === 0) {
+        showMessage('No board games found', 'error');
+        return;
+      }
+
+      const text = games.join('\n');
+
+      // Open BGM extract page with the games
+      const bgmUrl = BGM_BASE_URL + '/extract?text=' + encodeURIComponent(text);
+      chrome.tabs.create({ url: bgmUrl });
+
+      // Update stats
+      const stats = {
+        lastExtraction: {
+          domain: currentDomain,
+          count: games.length,
+          timestamp: Date.now()
+        }
+      };
+      await chrome.runtime.sendMessage({ action: 'updateStats', stats });
+
+      showMessage(`${games.length} games sent to BGM!`, 'success');
+      updateStatsDisplay(stats);
+    } else {
+      showMessage('Failed to extract games', 'error');
+    }
   } catch (error) {
     console.error('Error extracting:', error);
     showMessage('Error: ' + error.message, 'error');
   }
 }
 
-// Load and display stats
+// ── Stats ──
+
 async function loadStats() {
   chrome.runtime.sendMessage({ action: 'getStats' }, (response) => {
     if (response && response.success && response.stats) {
@@ -146,10 +188,8 @@ async function loadStats() {
   });
 }
 
-// Update stats display
 function updateStatsDisplay(stats) {
   const statsText = document.getElementById('stats-text');
-
   if (stats.lastExtraction) {
     const { count, domain } = stats.lastExtraction;
     statsText.textContent = `Last: ${count} games from ${domain}`;
@@ -158,34 +198,17 @@ function updateStatsDisplay(stats) {
   }
 }
 
-// Show message to user
+// ── UI helpers ──
+
 function showMessage(text, type) {
   const message = document.getElementById('message');
   message.textContent = text;
   message.className = `message ${type}`;
-
-  // Hide after 3 seconds
   setTimeout(() => {
     message.className = 'message hidden';
   }, 3000);
 }
 
-// Handle suggest button click
-function handleSuggest() {
-  const subject = encodeURIComponent('Board Game Extractor - Site Suggestion');
-  const body = encodeURIComponent(`I would like to suggest support for the following site:
-
-Site Name:
-Site URL:
-CSS Selector for game names:
-
-Additional notes:
-`);
-
-  window.open(`mailto:?subject=${subject}&body=${body}`);
-}
-
-// Handle settings button click
 function handleSettings() {
   chrome.runtime.openOptionsPage();
 }

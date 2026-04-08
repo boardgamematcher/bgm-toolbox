@@ -1,15 +1,11 @@
 // Background service worker for managing patterns and clipboard
 let cachedPatterns = [];
 
-// Initialize extension
-chrome.runtime.onInstalled.addListener(async () => {
-  console.log('Board Game Extractor installed');
-  await reloadPatterns();
-});
+// Load patterns eagerly (covers install, startup, and extension reload)
+reloadPatterns();
 
-// Reload patterns on startup
-chrome.runtime.onStartup.addListener(async () => {
-  await reloadPatterns();
+chrome.runtime.onInstalled.addListener(() => {
+  console.log('BGM Toolbox installed');
 });
 
 // Load patterns from storage helper
@@ -51,11 +47,15 @@ function findPatternForDomain(domain) {
 // Message handler
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'checkSiteSupport') {
-    const pattern = findPatternForDomain(message.domain);
-    sendResponse({
-      supported: pattern !== null,
-      pattern: pattern
-    });
+    const respond = () => {
+      const pattern = findPatternForDomain(message.domain);
+      sendResponse({ supported: pattern !== null, pattern });
+    };
+    if (cachedPatterns.length === 0) {
+      reloadPatterns().then(respond);
+      return true;
+    }
+    respond();
     return false;
   }
 
@@ -86,15 +86,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 });
 
-// Copy text to clipboard
+// Copy text to clipboard (no-op in service worker, kept for future use)
 async function copyToClipboard(text) {
-  try {
-    // Create offscreen document for clipboard access in Manifest V3
-    await navigator.clipboard.writeText(text);
-    console.log('Copied to clipboard:', text.substring(0, 100));
-  } catch (error) {
-    console.error('Error copying to clipboard:', error);
-  }
+  // navigator.clipboard is not available in MV3 service workers.
+  // Clipboard writes now happen from the popup context if needed.
+  console.log('copyToClipboard called, text length:', text.length);
 }
 
 // Update extraction stats
