@@ -119,10 +119,12 @@ async function checkSiteSupport() {
 
     chrome.runtime.sendMessage(
       { action: 'checkSiteSupport', domain: currentDomain, url: tab.url },
-      (response) => {
+      async (response) => {
         if (response && response.supported) {
           currentPattern = response.pattern;
           setSupported(response.pattern.name);
+          // Count games on page for button label
+          await countGames(tab.id, response.pattern);
         } else {
           setUnsupported(currentDomain);
         }
@@ -147,6 +149,24 @@ function setUnsupported(domain) {
   document.getElementById('unsupported-text').textContent = domain
     ? `${domain} is not a supported site yet.`
     : 'Open a supported board game shop to extract games.';
+}
+
+async function countGames(tabId, pattern) {
+  const selector = pattern.card_selector || pattern.selector;
+  if (!selector) return;
+  try {
+    const results = await chrome.scripting.executeScript({
+      target: { tabId },
+      func: (sel) => document.querySelectorAll(sel).length,
+      args: [selector],
+    });
+    const count = results?.[0]?.result;
+    if (count > 0) {
+      document.getElementById('extract-btn').textContent = `Extract ${count} games`;
+    }
+  } catch (_e) {
+    // Can't inject into this page — keep default button text
+  }
 }
 
 // ── Extraction ──
