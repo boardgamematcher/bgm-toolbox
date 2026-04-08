@@ -1,168 +1,174 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-  <meta charset="UTF-8">
-  <title>BGM Toolbox - Settings</title>
-  <link rel="stylesheet" href="options.css">
-</head>
-<body>
-  <div class="container">
-    <header>
-      <h1>BGM Toolbox Settings</h1>
-    </header>
+  <head>
+    <meta charset="UTF-8" />
+    <title>BGM Toolbox - Settings</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <div class="container">
+      <header>
+        <h1>BGM Toolbox Settings</h1>
+      </header>
 
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="supported">Supported Sites</button>
-      <button class="tab-btn" data-tab="custom">Custom Patterns</button>
-      <button class="tab-btn" data-tab="help">Help</button>
-    </nav>
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="supported">Supported Sites</button>
+        <button class="tab-btn" data-tab="custom">Custom Patterns</button>
+        <button class="tab-btn" data-tab="help">Help</button>
+      </nav>
 
-    <main>
-      <!-- Supported Sites Tab -->
-      <div id="supported-tab" class="tab-content active">
-        <div class="section-header">
-          <h2>Built-in Site Patterns</h2>
-          <p class="subtitle">These patterns are included with the extension</p>
+      <main>
+        <!-- Supported Sites Tab -->
+        <div id="supported-tab" class="tab-content active">
+          <div class="section-header">
+            <h2>Built-in Site Patterns</h2>
+            <p class="subtitle">These patterns are included with the extension</p>
+          </div>
+
+          <div class="search-box">
+            <input type="text" id="search-supported" placeholder="Search sites..." />
+          </div>
+
+          <div id="supported-list" class="pattern-list">
+            <!-- Populated by JavaScript -->
+          </div>
         </div>
 
-        <div class="search-box">
-          <input type="text" id="search-supported" placeholder="Search sites...">
+        <!-- Custom Patterns Tab -->
+        <div id="custom-tab" class="tab-content">
+          <div class="section-header">
+            <h2>Custom Patterns</h2>
+            <p class="subtitle">Add your own site extraction patterns</p>
+          </div>
+
+          <div class="actions">
+            <button id="add-pattern-btn" class="primary-btn">Add New Pattern</button>
+            <button id="import-btn" class="secondary-btn">Import JSON</button>
+            <button id="export-btn" class="secondary-btn">Export JSON</button>
+          </div>
+
+          <div id="custom-list" class="pattern-list">
+            <!-- Populated by JavaScript -->
+          </div>
+
+          <div id="custom-empty" class="empty-state">
+            <p>No custom patterns yet</p>
+            <p class="hint">Click "Add New Pattern" to create one</p>
+          </div>
         </div>
 
-        <div id="supported-list" class="pattern-list">
-          <!-- Populated by JavaScript -->
+        <!-- Help Tab -->
+        <div id="help-tab" class="tab-content">
+          <div class="section-header">
+            <h2>Help & Documentation</h2>
+          </div>
+
+          <section class="help-section">
+            <h3>How to Use</h3>
+            <ol>
+              <li>Navigate to a supported website</li>
+              <li>Click the extension icon in your browser toolbar</li>
+              <li>Click "Extract Board Games"</li>
+              <li>Game names are copied to your clipboard</li>
+            </ol>
+          </section>
+
+          <section class="help-section">
+            <h3>CSS Selector Guide</h3>
+            <p>CSS selectors are patterns used to find elements on a webpage:</p>
+            <ul>
+              <li><code>h3</code> - All h3 elements</li>
+              <li><code>.product-name</code> - Elements with class "product-name"</li>
+              <li><code>#game-title</code> - Element with id "game-title"</li>
+              <li><code>article h3</code> - h3 elements inside article elements</li>
+              <li><code>[data-id]</code> - Elements with data-id attribute</li>
+            </ul>
+          </section>
+
+          <section class="help-section">
+            <h3>Filter Patterns</h3>
+            <p>Use regex patterns to filter results:</p>
+            <ul>
+              <li><code>^Sponsored</code> - Exclude items starting with "Sponsored"</li>
+              <li><code>Advertisement</code> - Exclude items containing "Advertisement"</li>
+              <li><code>.*Game$</code> - Include only items ending with "Game"</li>
+            </ul>
+          </section>
+
+          <section class="help-section">
+            <h3>Need Help?</h3>
+            <p>
+              Visit our
+              <a href="https://github.com/yourusername/bgm-extension" target="_blank"
+                >GitHub repository</a
+              >
+              for more information and to report issues.
+            </p>
+          </section>
         </div>
-      </div>
-
-      <!-- Custom Patterns Tab -->
-      <div id="custom-tab" class="tab-content">
-        <div class="section-header">
-          <h2>Custom Patterns</h2>
-          <p class="subtitle">Add your own site extraction patterns</p>
-        </div>
-
-        <div class="actions">
-          <button id="add-pattern-btn" class="primary-btn">Add New Pattern</button>
-          <button id="import-btn" class="secondary-btn">Import JSON</button>
-          <button id="export-btn" class="secondary-btn">Export JSON</button>
-        </div>
-
-        <div id="custom-list" class="pattern-list">
-          <!-- Populated by JavaScript -->
-        </div>
-
-        <div id="custom-empty" class="empty-state">
-          <p>No custom patterns yet</p>
-          <p class="hint">Click "Add New Pattern" to create one</p>
-        </div>
-      </div>
-
-      <!-- Help Tab -->
-      <div id="help-tab" class="tab-content">
-        <div class="section-header">
-          <h2>Help & Documentation</h2>
-        </div>
-
-        <section class="help-section">
-          <h3>How to Use</h3>
-          <ol>
-            <li>Navigate to a supported website</li>
-            <li>Click the extension icon in your browser toolbar</li>
-            <li>Click "Extract Board Games"</li>
-            <li>Game names are copied to your clipboard</li>
-          </ol>
-        </section>
-
-        <section class="help-section">
-          <h3>CSS Selector Guide</h3>
-          <p>CSS selectors are patterns used to find elements on a webpage:</p>
-          <ul>
-            <li><code>h3</code> - All h3 elements</li>
-            <li><code>.product-name</code> - Elements with class "product-name"</li>
-            <li><code>#game-title</code> - Element with id "game-title"</li>
-            <li><code>article h3</code> - h3 elements inside article elements</li>
-            <li><code>[data-id]</code> - Elements with data-id attribute</li>
-          </ul>
-        </section>
-
-        <section class="help-section">
-          <h3>Filter Patterns</h3>
-          <p>Use regex patterns to filter results:</p>
-          <ul>
-            <li><code>^Sponsored</code> - Exclude items starting with "Sponsored"</li>
-            <li><code>Advertisement</code> - Exclude items containing "Advertisement"</li>
-            <li><code>.*Game$</code> - Include only items ending with "Game"</li>
-          </ul>
-        </section>
-
-        <section class="help-section">
-          <h3>Need Help?</h3>
-          <p>Visit our <a href="https://github.com/yourusername/bgm-extension" target="_blank">GitHub repository</a> for more information and to report issues.</p>
-        </section>
-      </div>
-    </main>
-  </div>
-
-  <!-- Pattern Editor Modal -->
-  <div id="pattern-modal" class="modal hidden">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-title">Add Pattern</h2>
-        <button id="modal-close" class="close-btn">&times;</button>
-      </div>
-
-      <form id="pattern-form">
-        <div class="form-group">
-          <label for="domain-input">Domain *</label>
-          <input type="text" id="domain-input" placeholder="example.com" required>
-          <span class="hint">Without http:// or www</span>
-        </div>
-
-        <div class="form-group">
-          <label for="name-input">Display Name *</label>
-          <input type="text" id="name-input" placeholder="Example Site" required>
-        </div>
-
-        <div class="form-group">
-          <label for="selector-input">CSS Selector *</label>
-          <input type="text" id="selector-input" placeholder=".product-name" required>
-          <span class="hint">CSS selector to find game names</span>
-        </div>
-
-        <div class="form-group">
-          <label for="exclude-input">Exclude Patterns (comma-separated)</label>
-          <input type="text" id="exclude-input" placeholder="^Sponsored, ^Ad">
-          <span class="hint">Regex patterns to exclude results</span>
-        </div>
-
-        <div class="form-group">
-          <label for="include-input">Include Patterns (comma-separated)</label>
-          <input type="text" id="include-input" placeholder="Game$, Board">
-          <span class="hint">Regex patterns to include only matching results</span>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" id="trim-input" checked>
-            Trim whitespace
-          </label>
-        </div>
-
-        <div class="form-group checkbox-group">
-          <label>
-            <input type="checkbox" id="dedupe-input" checked>
-            Remove duplicates
-          </label>
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" id="cancel-btn" class="secondary-btn">Cancel</button>
-          <button type="submit" class="primary-btn">Save Pattern</button>
-        </div>
-      </form>
+      </main>
     </div>
-  </div>
 
-  <script src="options.js"></script>
-</body>
+    <!-- Pattern Editor Modal -->
+    <div id="pattern-modal" class="modal hidden">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modal-title">Add Pattern</h2>
+          <button id="modal-close" class="close-btn">&times;</button>
+        </div>
+
+        <form id="pattern-form">
+          <div class="form-group">
+            <label for="domain-input">Domain *</label>
+            <input type="text" id="domain-input" placeholder="example.com" required />
+            <span class="hint">Without http:// or www</span>
+          </div>
+
+          <div class="form-group">
+            <label for="name-input">Display Name *</label>
+            <input type="text" id="name-input" placeholder="Example Site" required />
+          </div>
+
+          <div class="form-group">
+            <label for="selector-input">CSS Selector *</label>
+            <input type="text" id="selector-input" placeholder=".product-name" required />
+            <span class="hint">CSS selector to find game names</span>
+          </div>
+
+          <div class="form-group">
+            <label for="exclude-input">Exclude Patterns (comma-separated)</label>
+            <input type="text" id="exclude-input" placeholder="^Sponsored, ^Ad" />
+            <span class="hint">Regex patterns to exclude results</span>
+          </div>
+
+          <div class="form-group">
+            <label for="include-input">Include Patterns (comma-separated)</label>
+            <input type="text" id="include-input" placeholder="Game$, Board" />
+            <span class="hint">Regex patterns to include only matching results</span>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="trim-input" checked />
+              Trim whitespace
+            </label>
+          </div>
+
+          <div class="form-group checkbox-group">
+            <label>
+              <input type="checkbox" id="dedupe-input" checked />
+              Remove duplicates
+            </label>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" id="cancel-btn" class="secondary-btn">Cancel</button>
+            <button type="submit" class="primary-btn">Save Pattern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script src="options.js"></script>
+  </body>
 </html>

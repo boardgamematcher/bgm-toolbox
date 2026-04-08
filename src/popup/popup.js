@@ -87,8 +87,9 @@ function setSupported(siteName) {
 function setUnsupported(domain) {
   document.getElementById('card-extract').style.display = 'none';
   document.getElementById('card-unsupported').style.display = '';
-  document.getElementById('unsupported-text').textContent =
-    domain ? `${domain} is not a supported site yet.` : 'Open a supported board game shop to extract games.';
+  document.getElementById('unsupported-text').textContent = domain
+    ? `${domain} is not a supported site yet.`
+    : 'Open a supported board game shop to extract games.';
 }
 
 // ── Extraction ──
@@ -96,23 +97,19 @@ function setUnsupported(domain) {
 async function injectContentScript(tabId) {
   await chrome.scripting.executeScript({
     target: { tabId },
-    files: ['src/lib/pattern-matcher.js', 'src/content/content-script.js']
+    files: ['src/lib/pattern-matcher.js', 'src/content/content-script.js'],
   });
 }
 
 function sendExtractMessage(tabId, pattern) {
   return new Promise((resolve) => {
-    chrome.tabs.sendMessage(
-      tabId,
-      { action: 'extractGames', pattern },
-      (response) => {
-        if (chrome.runtime.lastError) {
-          resolve({ error: chrome.runtime.lastError.message });
-        } else {
-          resolve(response);
-        }
+    chrome.tabs.sendMessage(tabId, { action: 'extractGames', pattern }, (response) => {
+      if (chrome.runtime.lastError) {
+        resolve({ error: chrome.runtime.lastError.message });
+      } else {
+        resolve(response);
       }
-    );
+    });
   });
 }
 
@@ -162,8 +159,8 @@ async function handleExtract() {
         lastExtraction: {
           domain: currentDomain,
           count: games.length,
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       };
       await chrome.runtime.sendMessage({ action: 'updateStats', stats });
 

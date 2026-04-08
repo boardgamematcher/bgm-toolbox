@@ -22,10 +22,10 @@ async function reloadPatterns() {
 
     // Merge patterns (custom overrides built-in by domain)
     const patternMap = new Map();
-    builtIn.forEach(pattern => {
+    builtIn.forEach((pattern) => {
       patternMap.set(pattern.domain, pattern);
     });
-    custom.forEach(pattern => {
+    custom.forEach((pattern) => {
       patternMap.set(pattern.domain, pattern);
     });
 
@@ -39,9 +39,7 @@ async function reloadPatterns() {
 
 // Find pattern for domain
 function findPatternForDomain(domain) {
-  return cachedPatterns.find(p =>
-    domain === p.domain || domain.endsWith('.' + p.domain)
-  ) || null;
+  return cachedPatterns.find((p) => domain === p.domain || domain.endsWith('.' + p.domain)) || null;
 }
 
 // Message handler
@@ -79,7 +77,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   }
 
   if (message.action === 'getStats') {
-    getStats().then(stats => {
+    getStats().then((stats) => {
       sendResponse({ success: true, stats });
     });
     return true; // Async response

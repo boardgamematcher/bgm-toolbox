@@ -36,7 +36,13 @@
 }
 
 body {
-  font-family: 'Archivo', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family:
+    'Archivo',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
   font-size: 14px;
   color: var(--text-primary);
   background: var(--bg-base);
@@ -420,7 +426,7 @@ main {
   color: var(--text-secondary);
 }
 
-.form-group input[type="text"] {
+.form-group input[type='text'] {
   width: 100%;
   padding: 9px 12px;
   border: 1px solid var(--border-hover);
@@ -431,7 +437,7 @@ main {
   font-family: inherit;
 }
 
-.form-group input[type="text"]:focus {
+.form-group input[type='text']:focus {
   outline: none;
   border-color: var(--amber);
   box-shadow: 0 0 0 2px var(--amber-glow);
@@ -458,7 +464,7 @@ main {
   color: var(--text-secondary);
 }
 
-.checkbox-group input[type="checkbox"] {
+.checkbox-group input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;

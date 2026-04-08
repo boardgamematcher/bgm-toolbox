@@ -1,0 +1,28 @@
+import js from "@eslint/js";
+import globals from "globals";
+
+export default [
+  js.configs.recommended,
+  {
+    files: ["src/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "script",
+      globals: {
+        ...globals.browser,
+        ...globals.webextensions,
+        PatternMatcher: "writable",
+        Storage: "writable",
+        module: "readonly",
+      },
+    },
+    rules: {
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_|^e$" }],
+      "no-console": "off",
+      "no-redeclare": ["error", { builtinGlobals: false }],
+    },
+  },
+  {
+    ignores: ["node_modules/", "docs/", "tests/"],
+  },
+];
