@@ -16,13 +16,13 @@ function setupTabs() {
   const tabButtons = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
-  tabButtons.forEach(button => {
+  tabButtons.forEach((button) => {
     button.addEventListener('click', () => {
       const tabName = button.dataset.tab;
 
       // Update active states
-      tabButtons.forEach(btn => btn.classList.remove('active'));
-      tabContents.forEach(content => content.classList.remove('active'));
+      tabButtons.forEach((btn) => btn.classList.remove('active'));
+      tabContents.forEach((content) => content.classList.remove('active'));
 
       button.classList.add('active');
       document.getElementById(`${tabName}-tab`).classList.add('active');
@@ -73,13 +73,14 @@ function renderSupportedPatterns(filter = '') {
   const list = document.getElementById('supported-list');
   list.innerHTML = '';
 
-  const filtered = builtInPatterns.filter(p =>
-    filter === '' ||
-    p.name.toLowerCase().includes(filter.toLowerCase()) ||
-    p.domain.toLowerCase().includes(filter.toLowerCase())
+  const filtered = builtInPatterns.filter(
+    (p) =>
+      filter === '' ||
+      p.name.toLowerCase().includes(filter.toLowerCase()) ||
+      p.domain.toLowerCase().includes(filter.toLowerCase())
   );
 
-  filtered.forEach(pattern => {
+  filtered.forEach((pattern) => {
     const card = createPatternCard(pattern, false);
     list.appendChild(card);
   });
@@ -235,8 +236,8 @@ async function handleFormSubmit(e) {
       exclude: parseCommaSeparated(document.getElementById('exclude-input').value),
       include: parseCommaSeparated(document.getElementById('include-input').value),
       trim: document.getElementById('trim-input').checked,
-      deduplicate: document.getElementById('dedupe-input').checked
-    }
+      deduplicate: document.getElementById('dedupe-input').checked,
+    },
   };
 
   // Set include to null if empty
@@ -363,7 +364,10 @@ function handleSearch(e) {
 // Parse comma-separated string to array
 function parseCommaSeparated(str) {
   if (!str || !str.trim()) return [];
-  return str.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  return str
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 // Escape HTML to prevent XSS

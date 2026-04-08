@@ -9,7 +9,7 @@ const PatternMatcher = {
     try {
       // Execute CSS selector
       const elements = document.querySelectorAll(pattern.selector);
-      let games = Array.from(elements).map(el => el.textContent);
+      let games = Array.from(elements).map((el) => el.textContent);
 
       // Apply filters
       if (pattern.filters) {
@@ -29,27 +29,25 @@ const PatternMatcher = {
 
     // Trim whitespace if enabled
     if (filters.trim !== false) {
-      filtered = filtered.map(game => game.trim());
+      filtered = filtered.map((game) => game.trim());
     }
 
     // Apply exclude patterns
     if (filters.exclude && Array.isArray(filters.exclude)) {
-      filters.exclude.forEach(pattern => {
+      filters.exclude.forEach((pattern) => {
         const regex = new RegExp(pattern);
-        filtered = filtered.filter(game => !regex.test(game));
+        filtered = filtered.filter((game) => !regex.test(game));
       });
     }
 
     // Apply include patterns (only keep matches)
     if (filters.include && Array.isArray(filters.include)) {
-      const includeRegexes = filters.include.map(pattern => new RegExp(pattern));
-      filtered = filtered.filter(game =>
-        includeRegexes.some(regex => regex.test(game))
-      );
+      const includeRegexes = filters.include.map((pattern) => new RegExp(pattern));
+      filtered = filtered.filter((game) => includeRegexes.some((regex) => regex.test(game)));
     }
 
     // Remove empty strings
-    filtered = filtered.filter(game => game.length > 0);
+    filtered = filtered.filter((game) => game.length > 0);
 
     // Deduplicate if enabled
     if (filters.deduplicate !== false) {
@@ -85,7 +83,7 @@ const PatternMatcher = {
     }
 
     return { valid: true };
-  }
+  },
 };
 
 // Make available to other scripts

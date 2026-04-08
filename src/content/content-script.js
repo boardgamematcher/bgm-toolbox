@@ -8,7 +8,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     sendResponse({
       success: true,
       games: games,
-      count: games.length
+      count: games.length,
     });
     return false;
   }
@@ -33,7 +33,7 @@ function extractGames(pattern) {
     const elements = document.querySelectorAll(pattern.selector);
     console.log('Found elements:', elements.length);
 
-    let games = Array.from(elements).map(el => el.textContent);
+    let games = Array.from(elements).map((el) => el.textContent);
     console.log('Raw games:', games.length);
 
     // Apply filters using PatternMatcher

@@ -41,12 +41,12 @@ const Storage = {
 
     // Create map with built-in patterns
     const patternMap = new Map();
-    builtIn.forEach(pattern => {
+    builtIn.forEach((pattern) => {
       patternMap.set(pattern.domain, pattern);
     });
 
     // Override with custom patterns
-    custom.forEach(pattern => {
+    custom.forEach((pattern) => {
       patternMap.set(pattern.domain, pattern);
     });
 
@@ -56,7 +56,7 @@ const Storage = {
   // Find pattern matching current domain
   findPatternForDomain(patterns, domain) {
     // Try exact match first
-    let pattern = patterns.find(p => domain === p.domain || domain.endsWith('.' + p.domain));
+    let pattern = patterns.find((p) => domain === p.domain || domain.endsWith('.' + p.domain));
     return pattern || null;
   },
 
@@ -80,7 +80,7 @@ const Storage = {
       console.error('Error saving stats:', error);
       return false;
     }
-  }
+  },
 };
 
 // Make available to other scripts
