@@ -35,35 +35,32 @@ async function checkAuth() {
     } else {
       setLoggedOut();
     }
-  } catch (_e) {
-    // Network error or server down — show logged-out state silently
+  } catch (error) {
+    console.warn('Auth check failed:', error);
     setLoggedOut();
   }
 }
 
 function setLoggedIn(user) {
-  // Show avatar in header
   const avatar = document.getElementById('user-avatar');
+  avatar.textContent = '';
   if (user.avatar_url) {
-    avatar.innerHTML = '<img src="' + user.avatar_url + '" alt="">';
+    const img = document.createElement('img');
+    img.src = user.avatar_url;
+    img.alt = '';
+    avatar.appendChild(img);
   } else {
     avatar.textContent = (user.display_name || user.username || '?').charAt(0).toUpperCase();
   }
-  avatar.title = user.display_name || user.username;
+  avatar.title = user.display_name || user.username || '';
   avatar.style.display = '';
 
-  // Hide login card, show wishlist
   document.getElementById('card-login').style.display = 'none';
-  document.getElementById('card-wishlist').style.display = '';
 }
 
 function setLoggedOut() {
-  // Hide avatar
   document.getElementById('user-avatar').style.display = 'none';
-
-  // Show login card, hide wishlist (requires auth)
   document.getElementById('card-login').style.display = '';
-  document.getElementById('card-wishlist').style.display = 'none';
 }
 
 function handleLogin() {
@@ -120,10 +117,14 @@ async function checkSiteSupport() {
     chrome.runtime.sendMessage(
       { action: 'checkSiteSupport', domain: currentDomain, url: tab.url },
       async (response) => {
+        if (chrome.runtime.lastError) {
+          console.error('Message error:', chrome.runtime.lastError);
+          setUnsupported('Error checking site');
+          return;
+        }
         if (response && response.supported) {
           currentPattern = response.pattern;
           setSupported(response.pattern.name);
-          // Count games on page for button label
           await countGames(tab.id, response.pattern);
         } else {
           setUnsupported(currentDomain);
@@ -165,7 +166,7 @@ async function countGames(tabId, pattern) {
       document.getElementById('extract-btn').textContent = `Extract ${count} games`;
     }
   } catch (_e) {
-    // Can't inject into this page — keep default button text
+    // Can't inject into this page (e.g. chrome:// URLs)
   }
 }
 
@@ -183,11 +184,18 @@ function sendExtractMessage(tabId, pattern) {
     chrome.tabs.sendMessage(tabId, { action: 'extractGames', pattern }, (response) => {
       if (chrome.runtime.lastError) {
         resolve({ error: chrome.runtime.lastError.message });
-      } else {
+      } else if (response) {
         resolve(response);
+      } else {
+        resolve({ error: 'No response from content script' });
       }
     });
   });
+}
+
+function openFallbackExtraction(url) {
+  chrome.tabs.create({ url: BGM_BASE_URL + '/extract?url=' + encodeURIComponent(url) });
+  window.close();
 }
 
 async function handleExtract() {
@@ -210,19 +218,13 @@ async function handleExtract() {
         await injectContentScript(tab.id);
         response = await sendExtractMessage(tab.id, currentPattern);
       } catch (_e) {
-        // Fall back to URL-based extraction on the website
-        const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
-        chrome.tabs.create({ url: bgmUrl });
-        window.close();
+        openFallbackExtraction(tab.url);
         return;
       }
     }
 
     if (response.error || !response.success || !response.games?.length) {
-      // Fall back to URL-based extraction
-      const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
-      chrome.tabs.create({ url: bgmUrl });
-      window.close();
+      openFallbackExtraction(tab.url);
       return;
     }
 
@@ -230,20 +232,32 @@ async function handleExtract() {
 
     // POST structured data to BGM and open results page
     const payload = { source: currentDomain, url: tab.url, games };
-    const postResponse = await fetch(BGM_BASE_URL + '/api/extract/extension', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(payload),
-    });
+    try {
+      const postResponse = await fetch(BGM_BASE_URL + '/api/extract/extension', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
 
-    if (postResponse.ok) {
-      const result = await postResponse.json();
-      chrome.tabs.create({ url: BGM_BASE_URL + '/extract?job=' + result.job_id });
-    } else {
-      // Fall back to URL-based extraction
-      const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
-      chrome.tabs.create({ url: bgmUrl });
+      if (postResponse.ok) {
+        const result = await postResponse.json();
+        if (result && result.job_id) {
+          chrome.tabs.create({ url: BGM_BASE_URL + '/extract?job=' + result.job_id });
+        } else {
+          console.warn('Invalid API response, missing job_id');
+          openFallbackExtraction(tab.url);
+          return;
+        }
+      } else {
+        console.warn('API returned', postResponse.status);
+        openFallbackExtraction(tab.url);
+        return;
+      }
+    } catch (fetchError) {
+      console.warn('POST to BGM failed:', fetchError);
+      openFallbackExtraction(tab.url);
+      return;
     }
 
     // Update stats
@@ -267,6 +281,7 @@ async function handleExtract() {
 
 async function loadStats() {
   chrome.runtime.sendMessage({ action: 'getStats' }, (response) => {
+    if (chrome.runtime.lastError) return;
     if (response && response.success && response.stats) {
       updateStatsDisplay(response.stats);
     }
@@ -275,9 +290,9 @@ async function loadStats() {
 
 function updateStatsDisplay(stats) {
   const statsText = document.getElementById('stats-text');
-  if (stats.lastExtraction) {
+  if (stats.lastExtraction && typeof stats.lastExtraction.count === 'number') {
     const { count, domain } = stats.lastExtraction;
-    statsText.textContent = `Last: ${count} games from ${domain}`;
+    statsText.textContent = `Last: ${count} games from ${domain || 'unknown'}`;
   } else {
     statsText.textContent = 'No extractions yet';
   }
