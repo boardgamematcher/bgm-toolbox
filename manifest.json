@@ -9,6 +9,10 @@
     "storage",
     "scripting"
   ],
+  "host_permissions": [
+    "https://boardgamematcher.com/*",
+    "http://localhost:8000/*"
+  ],
   "background": {
     "service_worker": "src/background/service-worker.js"
   },
