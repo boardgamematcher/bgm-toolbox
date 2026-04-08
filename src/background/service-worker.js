@@ -1,17 +1,20 @@
-// Background service worker for managing patterns and clipboard
+// Background service worker for managing patterns
 const PROFILES_URL =
   'https://raw.githubusercontent.com/boardgamematcher/site-profiles/main/profiles.json';
 const PROFILES_CACHE_KEY = 'cachedProfiles';
 const PROFILES_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 
 let cachedPatterns = [];
+let isReloading = false;
 
-// Load patterns eagerly (covers install, startup, and extension reload)
-// Always fetch fresh from GitHub (cache is for between service worker restarts)
-chrome.storage.local.remove(PROFILES_CACHE_KEY).then(() => reloadPatterns());
+// Load patterns eagerly on service worker start
+reloadPatterns();
 
-chrome.runtime.onInstalled.addListener(() => {
-  console.log('BGM Toolbox installed/updated');
+// Clear profile cache on install/update so new profiles take effect
+chrome.runtime.onInstalled.addListener(async () => {
+  console.log('BGM Toolbox installed/updated — clearing profile cache');
+  await chrome.storage.local.remove(PROFILES_CACHE_KEY);
+  await reloadPatterns();
 });
 
 // Fetch shared profiles from GitHub, with local cache and bundled fallback
@@ -34,7 +37,6 @@ async function fetchSharedProfiles() {
     if (response.ok) {
       const data = await response.json();
       const profiles = data.profiles || [];
-      // Cache the result
       await chrome.storage.local.set({
         [PROFILES_CACHE_KEY]: { profiles, timestamp: Date.now() },
       });
@@ -49,7 +51,7 @@ async function fetchSharedProfiles() {
   try {
     const response = await fetch(chrome.runtime.getURL('patterns/built-in.json'));
     const data = await response.json();
-    return data.profiles || data.patterns || [];
+    return data.profiles || [];
   } catch (_e) {
     return [];
   }
@@ -57,14 +59,15 @@ async function fetchSharedProfiles() {
 
 // Load patterns from shared profiles + custom patterns
 async function reloadPatterns() {
+  if (isReloading) return;
+  isReloading = true;
   try {
     const sharedProfiles = await fetchSharedProfiles();
 
-    // Load custom patterns
     const result = await chrome.storage.local.get('customPatterns');
     const custom = result.customPatterns || [];
 
-    // Merge: shared profiles first, custom overrides by domain
+    // Merge: shared profiles first, custom overrides by domain+name
     const patternMap = new Map();
     sharedProfiles.forEach((p) => patternMap.set(p.domain + ':' + p.name, p));
     custom.forEach((p) => patternMap.set(p.domain + ':' + (p.name || 'custom'), p));
@@ -74,6 +77,8 @@ async function reloadPatterns() {
   } catch (error) {
     console.error('Error loading patterns:', error);
     cachedPatterns = [];
+  } finally {
+    isReloading = false;
   }
 }
 
@@ -85,7 +90,6 @@ function findPatternForDomain(domain, url) {
       if (p.url_pattern) {
         try {
           if (new RegExp(p.url_pattern).test(url)) {
-            console.log('Matched profile:', p.name, 'card_selector:', p.card_selector);
             return p;
           }
         } catch (_e) {
@@ -123,14 +127,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     reloadPatterns().then(() => {
       sendResponse({ success: true, count: cachedPatterns.length });
     });
-    return true; // Async response
+    return true;
   }
 
   if (message.action === 'getStats') {
     getStats().then((stats) => {
       sendResponse({ success: true, stats });
     });
-    return true; // Async response
+    return true;
   }
 });
 
