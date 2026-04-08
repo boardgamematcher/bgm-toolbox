@@ -18,6 +18,7 @@
             <span id="theme-icon">&#9790;</span>
           </button>
           <button id="settings-btn" class="icon-btn" title="Settings">&#9881;</button>
+          <div id="user-avatar" class="avatar" style="display: none" title="Logged in"></div>
         </div>
       </header>
 
@@ -85,6 +86,21 @@
             <div class="card-title">Last extraction</div>
           </div>
           <p class="card-body-text" id="stats-text">No extractions yet</p>
+        </div>
+
+        <!-- Login CTA card (shown when not authenticated) -->
+        <div class="card login-card" id="card-login" style="display: none">
+          <div class="login-card-inner">
+            <div class="login-icon">&#127922;</div>
+            <h3 class="login-title">Get more from your games</h3>
+            <p class="card-body-text">
+              Log plays, track prices, sync your collection, find players near you.
+            </p>
+            <button class="btn-primary" id="login-btn" style="margin-top: 10px">
+              Sign in to BoardGameMatcher
+            </button>
+            <a class="login-signup" id="signup-link" href="#">Create a free account &rarr;</a>
+          </div>
         </div>
       </div>
 

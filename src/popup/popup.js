@@ -2,10 +2,12 @@
 const BGM_BASE_URL = 'http://localhost:8000'; // TODO: change to https://boardgamematcher.com for production
 let currentDomain = null;
 let currentPattern = null;
+let currentUser = null;
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', async () => {
   loadTheme();
+  await checkAuth();
   await checkSiteSupport();
   await loadStats();
   setupEventListeners();
@@ -16,6 +18,61 @@ function setupEventListeners() {
   document.getElementById('extract-btn').addEventListener('click', handleExtract);
   document.getElementById('settings-btn').addEventListener('click', handleSettings);
   document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
+  document.getElementById('login-btn').addEventListener('click', handleLogin);
+  document.getElementById('signup-link').addEventListener('click', handleSignup);
+}
+
+// ── Auth ──
+
+async function checkAuth() {
+  try {
+    const response = await fetch(BGM_BASE_URL + '/api/me', {
+      credentials: 'include',
+    });
+    if (response.ok) {
+      currentUser = await response.json();
+      setLoggedIn(currentUser);
+    } else {
+      setLoggedOut();
+    }
+  } catch (_e) {
+    // Network error or server down — show logged-out state silently
+    setLoggedOut();
+  }
+}
+
+function setLoggedIn(user) {
+  // Show avatar in header
+  const avatar = document.getElementById('user-avatar');
+  if (user.avatar_url) {
+    avatar.innerHTML = '<img src="' + user.avatar_url + '" alt="">';
+  } else {
+    avatar.textContent = (user.display_name || user.username || '?').charAt(0).toUpperCase();
+  }
+  avatar.title = user.display_name || user.username;
+  avatar.style.display = '';
+
+  // Hide login card, show wishlist
+  document.getElementById('card-login').style.display = 'none';
+  document.getElementById('card-wishlist').style.display = '';
+}
+
+function setLoggedOut() {
+  // Hide avatar
+  document.getElementById('user-avatar').style.display = 'none';
+
+  // Show login card, hide wishlist (requires auth)
+  document.getElementById('card-login').style.display = '';
+  document.getElementById('card-wishlist').style.display = 'none';
+}
+
+function handleLogin() {
+  chrome.tabs.create({ url: BGM_BASE_URL + '/auth/login' });
+}
+
+function handleSignup(e) {
+  e.preventDefault();
+  chrome.tabs.create({ url: BGM_BASE_URL + '/auth/register' });
 }
 
 // ── Theme ──
@@ -129,7 +186,7 @@ async function handleExtract() {
       try {
         await injectContentScript(tab.id);
         response = await sendExtractMessage(tab.id, currentPattern);
-      } catch (e) {
+      } catch (_e) {
         showMessage('Cannot access this page', 'error');
         return;
       }
