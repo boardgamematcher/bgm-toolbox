@@ -118,7 +118,7 @@ async function checkSiteSupport() {
     currentDomain = url.hostname;
 
     chrome.runtime.sendMessage(
-      { action: 'checkSiteSupport', domain: currentDomain },
+      { action: 'checkSiteSupport', domain: currentDomain, url: tab.url },
       (response) => {
         if (response && response.supported) {
           currentPattern = response.pattern;
