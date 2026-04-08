@@ -1,5 +1,5 @@
 // BGM Toolbox — Popup controller
-const BGM_BASE_URL = 'http://localhost:8000'; // TODO: change to https://boardgamematcher.com for production
+const BGM_BASE_URL = 'https://boardgamematcher.com';
 let currentDomain = null;
 let currentPattern = null;
 let currentUser = null;
@@ -171,61 +171,29 @@ function sendExtractMessage(tabId, pattern) {
 }
 
 async function handleExtract() {
-  if (!currentPattern) {
-    showMessage('No pattern available', 'error');
-    return;
-  }
-
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    let response = await sendExtractMessage(tab.id, currentPattern);
-
-    // If content script not injected, inject and retry
-    if (response.error) {
-      try {
-        await injectContentScript(tab.id);
-        response = await sendExtractMessage(tab.id, currentPattern);
-      } catch (_e) {
-        showMessage('Cannot access this page', 'error');
-        return;
-      }
-    }
-
-    if (response.error) {
-      showMessage('Error: ' + response.error, 'error');
+    if (!tab || !tab.url) {
+      showMessage('No active tab', 'error');
       return;
     }
 
-    if (response && response.success) {
-      const games = response.games;
+    // Open BGM extract page with the current URL — let the website handle extraction
+    const bgmUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(tab.url);
+    chrome.tabs.create({ url: bgmUrl });
 
-      if (games.length === 0) {
-        showMessage('No board games found', 'error');
-        return;
-      }
+    // Update stats
+    const stats = {
+      lastExtraction: {
+        domain: currentDomain,
+        count: 0,
+        timestamp: Date.now(),
+      },
+    };
+    await chrome.runtime.sendMessage({ action: 'updateStats', stats });
 
-      const text = games.join('\n');
-
-      // Open BGM extract page with the games
-      const bgmUrl = BGM_BASE_URL + '/extract?text=' + encodeURIComponent(text);
-      chrome.tabs.create({ url: bgmUrl });
-
-      // Update stats
-      const stats = {
-        lastExtraction: {
-          domain: currentDomain,
-          count: games.length,
-          timestamp: Date.now(),
-        },
-      };
-      await chrome.runtime.sendMessage({ action: 'updateStats', stats });
-
-      showMessage(`${games.length} games sent to BGM!`, 'success');
-      updateStatsDisplay(stats);
-    } else {
-      showMessage('Failed to extract games', 'error');
-    }
+    updateStatsDisplay(stats);
+    window.close();
   } catch (error) {
     console.error('Error extracting:', error);
     showMessage('Error: ' + error.message, 'error');

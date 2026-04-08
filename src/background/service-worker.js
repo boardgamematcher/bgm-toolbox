@@ -7,10 +7,11 @@ const PROFILES_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 let cachedPatterns = [];
 
 // Load patterns eagerly (covers install, startup, and extension reload)
-reloadPatterns();
+// Always fetch fresh from GitHub (cache is for between service worker restarts)
+chrome.storage.local.remove(PROFILES_CACHE_KEY).then(() => reloadPatterns());
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('BGM Toolbox installed');
+  console.log('BGM Toolbox installed/updated');
 });
 
 // Fetch shared profiles from GitHub, with local cache and bundled fallback
@@ -48,7 +49,7 @@ async function fetchSharedProfiles() {
   try {
     const response = await fetch(chrome.runtime.getURL('patterns/built-in.json'));
     const data = await response.json();
-    return data.patterns || [];
+    return data.profiles || data.patterns || [];
   } catch (_e) {
     return [];
   }
@@ -83,7 +84,10 @@ function findPatternForDomain(domain, url) {
     for (const p of cachedPatterns) {
       if (p.url_pattern) {
         try {
-          if (new RegExp(p.url_pattern).test(url)) return p;
+          if (new RegExp(p.url_pattern).test(url)) {
+            console.log('Matched profile:', p.name, 'card_selector:', p.card_selector);
+            return p;
+          }
         } catch (_e) {
           // Invalid regex, skip
         }
@@ -109,12 +113,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
 
-  if (message.action === 'copyToClipboard') {
-    copyToClipboard(message.text);
-    sendResponse({ success: true });
-    return false;
-  }
-
   if (message.action === 'updateStats') {
     updateStats(message.stats);
     sendResponse({ success: true });
@@ -135,13 +133,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true; // Async response
   }
 });
-
-// Copy text to clipboard (no-op in service worker, kept for future use)
-async function copyToClipboard(text) {
-  // navigator.clipboard is not available in MV3 service workers.
-  // Clipboard writes now happen from the popup context if needed.
-  console.log('copyToClipboard called, text length:', text.length);
-}
 
 // Update extraction stats
 async function updateStats(stats) {
