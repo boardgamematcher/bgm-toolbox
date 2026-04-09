@@ -3,6 +3,17 @@
  * Handles the import button click and status display
  */
 
+// Show Yucata panel only on yucata.de
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  const url = tabs[0].url;
+  if (url && url.includes('yucata.de')) {
+    const yucataPanel = document.getElementById('yucataPanel');
+    if (yucataPanel) {
+      yucataPanel.style.display = 'block';
+    }
+  }
+});
+
 // Get the import button
 const yucataImportBtn = document.getElementById('yucataImportBtn');
 const yucataStatus = document.getElementById('yucataStatus');

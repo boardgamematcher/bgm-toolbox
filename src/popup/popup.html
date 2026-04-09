@@ -123,19 +123,6 @@
     </div>
 
     <script src="popup.js"></script>
-
-    <script>
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const url = tabs[0].url;
-        if (url && url.includes('yucata.de')) {
-          const yucataPanel = document.getElementById('yucataPanel');
-          if (yucataPanel) {
-            yucataPanel.style.display = 'block';
-          }
-        }
-      });
-    </script>
-
     <script src="yucata-import.js"></script>
   </body>
 </html>
