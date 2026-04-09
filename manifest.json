@@ -55,8 +55,14 @@
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "web_accessible_resources": [{
-    "resources": ["patterns/built-in.json"],
-    "matches": ["<all_urls>"]
-  }]
+  "web_accessible_resources": [
+    {
+      "resources": ["patterns/built-in.json"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["patterns/yucata-mapping.json"],
+      "matches": ["https://www.yucata.de/*"]
+    }
+  ]
 }
