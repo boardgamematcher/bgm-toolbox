@@ -13,6 +13,9 @@ function YucataMapper(mappingData) {
      */
     mapGameId(yucataId) {
       const mapped = mappings[yucataId];
+      // Return null (not throw) for unmapped games to allow graceful filtering
+      // in the import pipeline. Unmapped games are logged as warnings but don't
+      // block the entire import. This is better UX: import 100 games, skip 5 unknown ones.
       return mapped !== undefined ? mapped : null;
     },
 

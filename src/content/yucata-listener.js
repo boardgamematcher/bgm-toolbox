@@ -26,6 +26,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /**
+ * Validate play outcome value
+ * @param {string} outcome - The outcome to validate
+ * @returns {boolean} True if outcome is valid
+ * @description Valid outcomes are: 'win', 'loss', 'draw'. Yucata outcomes are normalized
+ * to lowercase during scraping, so we check for these exact values.
+ */
+function isValidOutcome(outcome) {
+  const validOutcomes = ['win', 'loss', 'draw'];
+  return validOutcomes.includes(outcome);
+}
+
+/**
  * Main import pipeline
  */
 async function importYucataPlays() {
@@ -44,12 +56,19 @@ async function importYucataPlays() {
     );
   }
 
-  // Step 3: Map game IDs and filter unmapped games
+  // Step 3: Map game IDs and validate outcomes, filter unmapped/invalid games
   const mappedPlays = rawPlays
     .map((play) => {
       const bggId = mapper.mapGameId(play.yucataId);
       if (!bggId) {
         console.warn(`Skipping unmapped Yucata game: ${play.gameName} (ID: ${play.yucataId})`);
+        return null;
+      }
+      // Validate outcome value (must be 'win', 'loss', or 'draw')
+      if (!isValidOutcome(play.outcome)) {
+        console.warn(
+          `Skipping play with invalid outcome: ${play.gameName} (outcome: ${play.outcome})`
+        );
         return null;
       }
       return {

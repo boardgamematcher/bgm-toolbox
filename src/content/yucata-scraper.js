@@ -30,8 +30,10 @@ function YucataScraper() {
             yucataId: cells[0],
             gameName: cells[1],
             date: cells[2],
+            // Parse player count as base-10 integer (radix 10 prevents accidental octal interpretation)
             playerCount: parseInt(cells[3], 10),
-            outcome: cells[4].toLowerCase(), // "win", "loss", "draw"
+            // Normalize outcome to lowercase for consistency (Yucata may vary casing)
+            outcome: cells[4].toLowerCase(),
           };
         })
         .filter((play) => play !== null);
