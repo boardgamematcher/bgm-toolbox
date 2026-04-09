@@ -34,10 +34,21 @@
       "128": "icons/icon128.png"
     }
   },
-  "content_scripts": [{
-    "matches": ["<all_urls>"],
-    "js": ["src/lib/pattern-matcher.js", "src/content/content-script.js"]
-  }],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/lib/pattern-matcher.js", "src/content/content-script.js"]
+    },
+    {
+      "matches": ["https://www.yucata.de/*"],
+      "js": [
+        "src/lib/yucata-mapper.js",
+        "src/lib/plays-api.js",
+        "src/content/yucata-scraper.js",
+        "src/content/yucata-listener.js"
+      ]
+    }
+  ],
   "options_page": "src/options/options.html",
   "icons": {
     "16": "icons/icon16.png",
