@@ -1,4 +1,4 @@
-import PlaysAPI from "../src/lib/plays-api.js";
+const PlaysAPI = require("../src/lib/plays-api.js");
 
 // Mock fetch for testing
 let fetchCalls = [];

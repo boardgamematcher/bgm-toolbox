@@ -2,7 +2,7 @@
  * YucataMapper
  * Maps Yucata game IDs to BGG object IDs using a lookup table.
  */
-const YucataMapper = (mappingData) => {
+function YucataMapper(mappingData) {
   const mappings = mappingData.mappings || {};
 
   return {
@@ -28,6 +28,14 @@ const YucataMapper = (mappingData) => {
       }));
     },
   };
-};
+}
 
-export default YucataMapper;
+// Export to global scope for use in content scripts
+if (typeof window !== 'undefined') {
+  window.YucataMapper = YucataMapper;
+}
+
+// Export for Node.js/Jest tests (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = YucataMapper;
+}

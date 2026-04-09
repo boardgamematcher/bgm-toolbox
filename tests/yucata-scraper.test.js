@@ -1,6 +1,5 @@
 // Import the scraper implementation
-import { default as YucataScraperModule } from "../src/content/yucata-scraper.js";
-const YucataScraper = YucataScraperModule;
+const YucataScraper = require("../src/content/yucata-scraper.js");
 
 // Mock DOM for testing
 const mockDOM = {

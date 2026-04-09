@@ -2,7 +2,7 @@
  * PlaysAPI
  * Client for posting play sessions to the BGM API
  */
-export default (baseUrl, fetchFn = fetch) => {
+const PlaysAPI = (baseUrl, fetchFn = fetch) => {
   return {
     /**
      * POST a single play session to /api/plays
@@ -46,3 +46,13 @@ export default (baseUrl, fetchFn = fetch) => {
     },
   };
 };
+
+// Export to global scope for use in content scripts
+if (typeof window !== 'undefined') {
+  window.PlaysAPI = PlaysAPI;
+}
+
+// Export for Node.js/Jest tests (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = PlaysAPI;
+}

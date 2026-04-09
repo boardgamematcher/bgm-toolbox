@@ -1,5 +1,5 @@
-import YucataMapper from '../src/lib/yucata-mapper.js';
-import PlaysAPI from '../src/lib/plays-api.js';
+const YucataMapper = require('../src/lib/yucata-mapper.js');
+const PlaysAPI = require('../src/lib/plays-api.js');
 
 // Mocks
 const mockMappingData = {

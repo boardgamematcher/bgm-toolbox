@@ -1,4 +1,4 @@
-import YucataMapper from '../src/lib/yucata-mapper.js';
+const YucataMapper = require('../src/lib/yucata-mapper.js');
 
 // Mock storage for testing
 const mockStorage = {

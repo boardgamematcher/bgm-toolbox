@@ -2,7 +2,7 @@
  * YucataScraper
  * Extracts play history data from the Yucata Game History page
  */
-export default function YucataScraper() {
+function YucataScraper() {
   return {
     /**
      * Parse play rows from a Yucata Game History DataTable
@@ -59,4 +59,14 @@ export default function YucataScraper() {
       return this.parsePlayRows(rows);
     },
   };
+}
+
+// Export to global scope for use in content scripts
+if (typeof window !== 'undefined') {
+  window.YucataScraper = YucataScraper;
+}
+
+// Export for Node.js/Jest tests (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = YucataScraper;
 }
