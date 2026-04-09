@@ -3,6 +3,7 @@ const PROFILES_URL =
   'https://raw.githubusercontent.com/boardgamematcher/site-profiles/main/profiles.json';
 const PROFILES_CACHE_KEY = 'cachedProfiles';
 const PROFILES_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+const BGM_BASE_URL = 'https://boardgamematcher.com';
 
 let cachedPatterns = [];
 let isReloading = false;
@@ -15,6 +16,43 @@ chrome.runtime.onInstalled.addListener(async () => {
   console.log('BGM Toolbox installed/updated — clearing profile cache');
   await chrome.storage.local.remove(PROFILES_CACHE_KEY);
   await reloadPatterns();
+
+  // Create context menus
+  chrome.contextMenus.create({
+    id: 'bgm-extract-page',
+    title: 'Extract Board Games from this page',
+    contexts: ['page'],
+  });
+  chrome.contextMenus.create({
+    id: 'bgm-extract-selection',
+    title: 'Extract Board Games from "%s"',
+    contexts: ['selection'],
+  });
+  chrome.contextMenus.create({
+    id: 'bgm-extract-link',
+    title: 'Extract Board Games from this link',
+    contexts: ['link'],
+  });
+});
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  let extractUrl;
+
+  if (info.menuItemId === 'bgm-extract-selection' && info.selectionText) {
+    extractUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(info.selectionText.trim());
+  } else if (info.menuItemId === 'bgm-extract-link' && info.linkUrl) {
+    extractUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(info.linkUrl);
+  } else if (info.menuItemId === 'bgm-extract-page') {
+    const pageUrl = info.pageUrl || tab?.url;
+    if (pageUrl) {
+      extractUrl = BGM_BASE_URL + '/extract?url=' + encodeURIComponent(pageUrl);
+    }
+  }
+
+  if (extractUrl) {
+    chrome.tabs.create({ url: extractUrl });
+  }
 });
 
 // Fetch shared profiles from GitHub, with local cache and bundled fallback
