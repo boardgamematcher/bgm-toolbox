@@ -7,12 +7,13 @@ export default [
     files: ["src/**/*.js"],
     languageOptions: {
       ecmaVersion: 2022,
-      sourceType: "script",
+      sourceType: "module",
       globals: {
         ...globals.browser,
         ...globals.webextensions,
         PatternMatcher: "writable",
         Storage: "writable",
+        YucataMapper: "writable",
         module: "readonly",
       },
     },
