@@ -18,10 +18,18 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 const yucataImportBtn = document.getElementById('yucataImportBtn');
 const yucataStatus = document.getElementById('yucataStatus');
 
+// Listen for progress updates from the service worker
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === 'yucataImportProgress' && yucataStatus) {
+    yucataStatus.textContent = `Sending plays to BGM... ${message.current}/${message.total}`;
+    yucataStatus.style.color = '#666';
+  }
+});
+
 if (yucataImportBtn) {
   yucataImportBtn.addEventListener('click', () => {
     yucataImportBtn.disabled = true;
-    yucataStatus.textContent = 'Importing...';
+    yucataStatus.textContent = 'Fetching all plays from Yucata... please wait';
     yucataStatus.style.color = '#666';
 
     // Send message to content script
@@ -29,18 +37,23 @@ if (yucataImportBtn) {
       chrome.tabs.sendMessage(tabs[0].id, { action: 'import_yucata_plays' }, (response) => {
         yucataImportBtn.disabled = false;
 
-        if (response.success) {
-          yucataStatus.textContent = `✓ Imported ${response.data.posted} plays!`;
+        if (chrome.runtime.lastError || !response) {
+          const msg = chrome.runtime.lastError?.message || 'No response from content script';
+          yucataStatus.textContent = `✗ Error: ${msg}`;
+          yucataStatus.style.color = 'red';
+        } else if (response.success) {
+          const { posted, skipped, duplicates } = response.data;
+          const parts = [`✓ Imported ${posted} plays!`];
+          if (duplicates > 0) parts.push(`${duplicates} duplicates skipped`);
+          if (skipped > 0) parts.push(`${skipped} not found on BGM`);
+          yucataStatus.textContent = parts.join(' · ');
           yucataStatus.style.color = 'green';
         } else {
           yucataStatus.textContent = `✗ Error: ${response.error}`;
           yucataStatus.style.color = 'red';
         }
 
-        // Clear status after 5 seconds
-        setTimeout(() => {
-          yucataStatus.textContent = '';
-        }, 5000);
+        // Keep status visible (don't auto-clear)
       });
     });
   });

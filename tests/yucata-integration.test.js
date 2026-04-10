@@ -12,9 +12,9 @@ describe('Yucata Import Pipeline', () => {
   };
 
   const mockRawPlays = [
-    { yucataId: "1", gameName: "Catan", date: "2025-04-09", playerCount: 4, outcome: "win" },
-    { yucataId: "2", gameName: "Ticket to Ride", date: "2025-04-08", playerCount: 3, outcome: "loss" },
-    { yucataId: "999", gameName: "Unknown Game", date: "2025-04-07", playerCount: 2, outcome: "win" }
+    { yucataId: "1", gameName: "Carcassonne", date: "2026-04-09", playerCount: 4, outcome: "win" },
+    { yucataId: "2", gameName: "Ticket to Ride", date: "2026-04-08", playerCount: 3, outcome: "loss" },
+    { yucataId: "999", gameName: "Unknown Game", date: "2026-04-07", playerCount: 2, outcome: "win" }
   ];
 
   let fetchCalls = [];
@@ -35,11 +35,11 @@ describe('Yucata Import Pipeline', () => {
     // Step 2: Map games (filtering unmapped)
     const mappedPlays = mockRawPlays
       .map((play) => {
-        const bggId = mapper.mapGameId(play.yucataId);
-        if (!bggId) return null;
+        const boardgame_id = mapper.mapGameId(play.yucataId);
+        if (!boardgame_id) return null;
         return {
           gameName: play.gameName,
-          bggId,
+          boardgame_id,
           date: play.date,
           playerCount: play.playerCount,
           outcome: play.outcome
@@ -48,8 +48,8 @@ describe('Yucata Import Pipeline', () => {
       .filter((play) => play !== null);
 
     expect(mappedPlays).toHaveLength(2);
-    expect(mappedPlays[0].bggId).toBe(822);
-    expect(mappedPlays[1].bggId).toBe(9209);
+    expect(mappedPlays[0].boardgame_id).toBe(822);
+    expect(mappedPlays[1].boardgame_id).toBe(9209);
 
     // Step 3: POST to API
     const api = PlaysAPI("http://localhost:3000", mockFetch);
@@ -61,7 +61,7 @@ describe('Yucata Import Pipeline', () => {
     // Verify payload structure
     const firstCall = JSON.parse(fetchCalls[0].options.body);
     expect(firstCall.source).toBe("yucata_import");
-    expect(firstCall.bggId).toBe(822);
-    expect(firstCall.gameName).toBe("Catan");
+    expect(firstCall.boardgame_id).toBe(822);
+    expect(firstCall.gameName).toBe("Carcassonne");
   });
 });

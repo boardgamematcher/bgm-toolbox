@@ -46,9 +46,9 @@ async function importYucataPlays() {
   const mappingData = await mappingResponse.json();
   const mapper = YucataMapper(mappingData);
 
-  // Step 2: Extract plays from the page
+  // Step 2: Extract plays from the page (async — uses injected page script for DataTable access)
   const scraper = YucataScraper();
-  const rawPlays = scraper.extractPlays();
+  const rawPlays = await scraper.extractPlays();
 
   if (rawPlays.length === 0) {
     throw new Error(
@@ -73,9 +73,9 @@ async function importYucataPlays() {
       }
       return {
         gameName: play.gameName,
-        bggId,
-        date: play.date,
-        playerCount: play.playerCount,
+        boardgame_id: bggId,
+        played_at: play.date,
+        player_count: play.playerCount,
         outcome: play.outcome,
       };
     })
@@ -85,18 +85,31 @@ async function importYucataPlays() {
     throw new Error('No plays could be mapped to BGG. Check the mapping table.');
   }
 
-  // Step 4: Get API URL from extension storage
-  const storage = await chrome.storage.local.get('apiUrl');
-  const apiUrl = storage.apiUrl || 'http://localhost:3000'; // Default for dev
+  // Notify popup of progress
+  chrome.runtime
+    .sendMessage({
+      action: 'yucataImportProgress',
+      total: mappedPlays.length,
+    })
+    .catch(() => {});
 
-  // Step 5: POST to BGM API
-  const api = PlaysAPI(apiUrl);
-  const results = await api.postPlays(mappedPlays);
+  // Step 4: POST to BGM API via background service worker (avoids CORS)
+  const response = await chrome.runtime.sendMessage({
+    action: 'postYucataPlays',
+    plays: mappedPlays,
+  });
+
+  if (!response.success) {
+    throw new Error(response.error);
+  }
+
+  const { posted, skipped, duplicates } = response.results;
 
   return {
     scraped: rawPlays.length,
     mapped: mappedPlays.length,
-    posted: results.length,
-    results,
+    posted: posted.length,
+    skipped: skipped.length,
+    duplicates,
   };
 }

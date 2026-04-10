@@ -1,64 +1,76 @@
 /**
  * YucataScraper
  * Extracts play history data from the Yucata Game History page
+ * Uses the DataTable API (via page-context script injection) to access all rows,
+ * including those not currently visible due to pagination.
  */
 function YucataScraper() {
   return {
     /**
-     * Parse play rows from a Yucata Game History DataTable
-     * Expects rows with cells: [GameTypeId, GameName, Date, PlayerCount, Outcome]
-     * @param {HTMLTableRowElement[]} rows - Array of table rows
+     * Parse DataTable row objects into play objects
+     * @param {Object[]} rows - Array of DataTable row data
      * @returns {Object[]} Array of parsed play objects
      */
-    parsePlayRows(rows) {
+    parseDataTableRows(rows) {
       return rows
         .map((row) => {
-          const cells = Array.from(row.cells || []).map((cell) => {
-            // Handle both DOM elements (with textContent) and test strings
-            if (typeof cell === 'string') {
-              return cell;
-            }
-            return cell.textContent ? cell.textContent.trim() : '';
-          });
-
-          // Expect: [yucataId, gameName, date, playerCount, outcome]
-          if (cells.length < 5) {
-            return null; // Skip malformed rows
+          if (!row.GameTypeId || !row.FinishedOnString) {
+            return null;
           }
 
+          // Convert DD.MM.YYYY to YYYY-MM-DD
+          const dateParts = row.FinishedOnString.split('.');
+          if (dateParts.length !== 3) {
+            return null;
+          }
+          const date = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+
+          // FinalPosition 1 = win, otherwise loss
+          const outcome = row.FinalPosition === 1 ? 'win' : 'loss';
+
           return {
-            yucataId: cells[0],
-            gameName: cells[1],
-            date: cells[2],
-            // Parse player count as base-10 integer (radix 10 prevents accidental octal interpretation)
-            playerCount: parseInt(cells[3], 10),
-            // Normalize outcome to lowercase for consistency (Yucata may vary casing)
-            outcome: cells[4].toLowerCase(),
+            yucataId: String(row.GameTypeId),
+            gameName: row.GameTypeName,
+            date,
+            playerCount: row.NumPlayers,
+            outcome,
           };
         })
         .filter((play) => play !== null);
     },
 
     /**
-     * Extract all plays from the page
-     * Finds the Game History DataTable and extracts all visible rows
-     * @returns {Object[]} Array of play objects
+     * Extract all plays from the page using DataTable API
+     * Injects a script into the page context to access jQuery DataTable data,
+     * which gives access to all rows regardless of pagination state.
+     * @returns {Promise<Object[]>} Array of play objects
      */
     extractPlays() {
-      // Selector for Yucata Game History DataTable (may need adjustment based on actual DOM)
-      const table = document.querySelector('#divPlayerRankingListTable');
-      if (!table) {
-        console.warn('Yucata Game History table not found');
-        return [];
-      }
+      return new Promise((resolve, reject) => {
+        const timeout = setTimeout(() => {
+          window.removeEventListener('message', handler);
+          reject(new Error('Timed out waiting for Yucata DataTable data'));
+        }, 60000);
 
-      const tbody = table.querySelector('tbody');
-      if (!tbody) {
-        return [];
-      }
+        const handler = (event) => {
+          if (event.data && event.data.type === 'bgm-yucata-data') {
+            window.removeEventListener('message', handler);
+            clearTimeout(timeout);
+            if (event.data.error) {
+              reject(new Error(event.data.error));
+            } else {
+              resolve(this.parseDataTableRows(event.data.plays));
+            }
+          }
+        };
+        window.addEventListener('message', handler);
 
-      const rows = Array.from(tbody.querySelectorAll('tr'));
-      return this.parsePlayRows(rows);
+        // Inject script into page context to access DataTable API
+        const script = document.createElement('script');
+        script.src = chrome.runtime.getURL('src/content/yucata-page-extract.js');
+        document.documentElement.appendChild(script);
+        script.remove();
+      });
     },
   };
 }

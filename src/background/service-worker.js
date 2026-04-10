@@ -168,6 +168,13 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
+  if (message.action === 'postYucataPlays') {
+    postYucataPlays(message.plays)
+      .then((results) => sendResponse({ success: true, results }))
+      .catch((error) => sendResponse({ success: false, error: error.message }));
+    return true;
+  }
+
   if (message.action === 'getStats') {
     getStats().then((stats) => {
       sendResponse({ success: true, stats });
@@ -183,6 +190,62 @@ async function updateStats(stats) {
   } catch (error) {
     console.error('Error updating stats:', error);
   }
+}
+
+// POST Yucata plays to BGM API in chunks to avoid server timeouts
+async function postYucataPlays(plays) {
+  const storage = await chrome.storage.local.get('apiUrl');
+  const apiUrl = storage.apiUrl || BGM_BASE_URL;
+  const CHUNK_SIZE = 200;
+
+  const allPlays = plays.map((play) => ({
+    bgg_id: play.boardgame_id,
+    gameName: play.gameName,
+    played_at: play.played_at,
+    player_count: play.player_count,
+    outcome: play.outcome,
+  }));
+
+  const allPosted = [];
+  const allSkipped = [];
+
+  for (let i = 0; i < allPlays.length; i += CHUNK_SIZE) {
+    const chunk = allPlays.slice(i, i + CHUNK_SIZE);
+
+    // Broadcast progress
+    chrome.runtime
+      .sendMessage({
+        action: 'yucataImportProgress',
+        current: Math.min(i + CHUNK_SIZE, allPlays.length),
+        total: allPlays.length,
+      })
+      .catch(() => {});
+
+    const response = await fetch(`${apiUrl}/api/plays/batch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-BGM-Source': 'toolbox' },
+      body: JSON.stringify({ plays: chunk }),
+    });
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`API error ${response.status}: ${body}`);
+    }
+
+    const result = await response.json();
+    allPosted.push(...(result.play_sessions || []));
+    allSkipped.push(...(result.skipped_games || []));
+  }
+
+  if (allSkipped.length > 0) {
+    console.warn('Yucata import: games not found on BGM:', allSkipped.join(', '));
+  }
+
+  return {
+    posted: allPosted,
+    skipped: allSkipped,
+    duplicates: allSkipped.length,
+  };
 }
 
 // Get extraction stats
