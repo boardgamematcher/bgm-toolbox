@@ -1,34 +1,60 @@
 const { describe, test, expect } = require('@jest/globals');
-const { BGAScraper, isWinText } = require('../src/content/bga-scraper.js');
+const { BGAScraper, extractLabel, isWinLabel } = require('../src/content/bga-scraper.js');
 
 describe('BGAScraper', () => {
-  describe('isWinText', () => {
-    test('detects French "Gagnant"', () => {
-      expect(isWinText('Gagnant - PlayerName - 5')).toBe(true);
+  describe('extractLabel', () => {
+    test('extracts French "Gagnant" label', () => {
+      expect(extractLabel('Gagnant - PlayerName - 5')).toBe('Gagnant');
     });
 
-    test('detects English "Winner"', () => {
-      expect(isWinText('Winner - PlayerName - 5')).toBe(true);
+    test('extracts English "Winner" label', () => {
+      expect(extractLabel('Winner - PlayerName - 5')).toBe('Winner');
     });
 
-    test('detects French ordinal "1er"', () => {
-      expect(isWinText('1er - PlayerName - 42')).toBe(true);
+    test('extracts French ordinal "1er" label', () => {
+      expect(extractLabel('1er - PlayerName - 42')).toBe('1er');
     });
 
-    test('detects "1st"', () => {
-      expect(isWinText('1st - PlayerName - 42')).toBe(true);
+    test('extracts "1st" label', () => {
+      expect(extractLabel('1st - PlayerName - 42')).toBe('1st');
     });
 
-    test('does not match second place', () => {
-      expect(isWinText('2e - PlayerName - 30')).toBe(false);
+    test('extracts "2e" label', () => {
+      expect(extractLabel('2e - PlayerName - 30')).toBe('2e');
     });
 
-    test('does not match non-win text', () => {
-      expect(isWinText('Perdant - PlayerName - 10')).toBe(false);
+    test('handles text without separator', () => {
+      expect(extractLabel('  some text  ')).toBe('some text');
     });
   });
 
-  describe('parseResultHtml', () => {
+  describe('isWinLabel', () => {
+    test('detects French "Gagnant"', () => {
+      expect(isWinLabel('Gagnant')).toBe(true);
+    });
+
+    test('detects English "Winner"', () => {
+      expect(isWinLabel('Winner')).toBe(true);
+    });
+
+    test('detects German "Gewinner"', () => {
+      expect(isWinLabel('Gewinner')).toBe(true);
+    });
+
+    test('rejects French loss label', () => {
+      expect(isWinLabel('Perdant')).toBe(false);
+    });
+
+    test('rejects English loss label', () => {
+      expect(isWinLabel('Loser')).toBe(false);
+    });
+
+    test('rejects unknown labels (safe default)', () => {
+      expect(isWinLabel('何か')).toBe(false);
+    });
+  });
+
+  describe('parseResultHtml — position-based win detection', () => {
     const scraper = BGAScraper();
     const playerId = '84147370';
 
@@ -63,15 +89,15 @@ describe('BGAScraper', () => {
       expect(result.playerCount).toBe(3);
     });
 
-    test('detects win for current player (Gagnant)', () => {
+    test('detects win for first-place player (competitive)', () => {
       const html = `
-        <a href="/table?table=1"><span class="gamename">Sky Team</span></a>:
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
         <div>
           <div class="board-score-entry">
-            Gagnant - <a href="player?id=84147370" class="playername">Me</a> - 5
+            1er - <a href="player?id=84147370" class="playername">Me</a> - 50
           </div>
           <div class="board-score-entry">
-            Gagnant - <a href="player?id=99999" class="playername">Other</a> - 5
+            2e - <a href="player?id=99999" class="playername">Other</a> - 30
           </div>
         </div>
       `;
@@ -80,7 +106,7 @@ describe('BGAScraper', () => {
       expect(result.outcome).toBe('win');
     });
 
-    test('detects loss for current player', () => {
+    test('detects loss for non-first player (competitive)', () => {
       const html = `
         <a href="/table?table=1"><span class="gamename">Catan</span></a>:
         <div>
@@ -89,6 +115,74 @@ describe('BGAScraper', () => {
           </div>
           <div class="board-score-entry">
             2e - <a href="player?id=84147370" class="playername">Me</a> - 30
+          </div>
+        </div>
+      `;
+
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('loss');
+    });
+
+    test('detects co-op win (all players share same label)', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Sky Team</span></a>:
+        <div>
+          <div class="board-score-entry">
+            Gagnant - <a href="player?id=99999" class="playername">Other</a> - 5
+          </div>
+          <div class="board-score-entry">
+            Gagnant - <a href="player?id=84147370" class="playername">Me</a> - 5
+          </div>
+        </div>
+      `;
+
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('win');
+    });
+
+    test('detects co-op loss (all players share same loss label)', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Sky Team</span></a>:
+        <div>
+          <div class="board-score-entry">
+            Perdant - <a href="player?id=99999" class="playername">Other</a> - 0
+          </div>
+          <div class="board-score-entry">
+            Perdant - <a href="player?id=84147370" class="playername">Me</a> - 0
+          </div>
+        </div>
+      `;
+
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('loss');
+    });
+
+    test('works with German labels (language-independent)', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">
+            Gewinner - <a href="player?id=84147370" class="playername">Me</a> - 50
+          </div>
+          <div class="board-score-entry">
+            2. - <a href="player?id=99999" class="playername">Other</a> - 30
+          </div>
+        </div>
+      `;
+
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('win');
+    });
+
+    test('works with Korean/any language (position-based)', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">
+            승자 - <a href="player?id=99999" class="playername">Other</a> - 50
+          </div>
+          <div class="board-score-entry">
+            2위 - <a href="player?id=84147370" class="playername">Me</a> - 30
           </div>
         </div>
       `;
@@ -149,6 +243,7 @@ describe('BGAScraper', () => {
       expect(plays).toHaveLength(1);
       expect(plays[0]).toEqual({
         bgaGameId: '1234',
+        bgaSlug: '',
         gameName: 'Catan',
         date: '2024-04-09',
         playerCount: 2,
