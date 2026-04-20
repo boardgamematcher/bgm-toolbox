@@ -25,8 +25,16 @@ function YucataScraper() {
           }
           const date = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
 
-          // FinalPosition 1 = win, otherwise loss
-          const outcome = row.FinalPosition === 1 ? 'win' : 'loss';
+          // FinalPosition is an explicit final rank from Yucata.
+          //   1         → 'win'
+          //   >=2       → 'loss' (explicit lower rank)
+          //   0/missing → null (unfinished, solo, or no group outcome — do not guess)
+          let outcome = null;
+          if (row.FinalPosition === 1) {
+            outcome = 'win';
+          } else if (typeof row.FinalPosition === 'number' && row.FinalPosition >= 2) {
+            outcome = 'loss';
+          }
 
           return {
             yucataId: String(row.GameTypeId),

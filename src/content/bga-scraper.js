@@ -31,12 +31,15 @@ function BGAScraper(fetchFn, tokenOverride) {
      * @param {string} html - HTML fragment from a BGA news item
      * @param {string} playerId - The current player's BGA ID
      * @returns {Object} Parsed play details { gameName, playerCount, outcome }
+     *   outcome is 'win' | 'loss' | null. null means the source didn't give us
+     *   enough to decide (co-op with unknown label, player not listed, empty
+     *   HTML). Never guess — downstream stores null rather than a false loss.
      */
     parseResultHtml(html, playerId) {
       // Use DOMParser if available (browser), otherwise use regex fallback (tests)
       let gameName = '';
       let playerCount = 0;
-      let outcome = 'loss';
+      let outcome = null;
 
       if (typeof DOMParser !== 'undefined') {
         const doc = new DOMParser().parseFromString(html, 'text/html');
@@ -53,15 +56,11 @@ function BGAScraper(fetchFn, tokenOverride) {
         //
         // Competitive games: entries are ordered by rank — first entry = winner.
         //   Different labels per entry (e.g. "1er", "2e", "3e").
-        //   → Player at index 0 = win.
+        //   → Player at index 0 = 'win', any other index = 'loss' (explicit rank).
         //
-        // Co-op games: all entries share the same label ("Gagnant" or "Perdant").
-        //   → All labels identical = co-op. Check if labels differ across entries
-        //     to distinguish competitive from co-op. For co-op, the player at
-        //     index 0 is still the "reference" — same label = same outcome.
-        //     Since in co-op loss ALL labels are the same loss word, we detect
-        //     co-op by checking label uniformity, then use index 0 = win only
-        //     for competitive (where labels differ).
+        // Co-op games: all entries share the same label ("Gagnant"/"Perdant"/etc).
+        //   → Match the shared label against known win/loss word lists.
+        //     Unknown label = null (we cannot tell; do not guess).
 
         // Collect all labels
         const labels = Array.from(scoreEntries).map((e) => extractLabel(e.textContent));
@@ -76,21 +75,9 @@ function BGAScraper(fetchFn, tokenOverride) {
           if (!idMatch || idMatch[1] !== String(playerId)) return;
 
           if (allSameLabel) {
-            // Co-op: all players share the same label.
-            // First entry is always rank 1, so index 0 = win.
-            // But in co-op everyone has the same outcome, so just check index 0.
-            // BGA always lists winners as rank 1 even in co-op.
-            // If the shared label matches a known win pattern, it's a win.
-            // Fallback: use isWinLabel() for the small co-op win/loss distinction.
-            if (isWinLabel(labels[0])) {
-              outcome = 'win';
-            }
+            outcome = coopOutcomeFromLabel(labels[0]);
           } else {
-            // Competitive: different labels = different ranks.
-            // Index 0 = first place = win.
-            if (index === 0) {
-              outcome = 'win';
-            }
+            outcome = index === 0 ? 'win' : 'loss';
           }
         });
       } else {
@@ -117,13 +104,9 @@ function BGAScraper(fetchFn, tokenOverride) {
           const playerIdPattern = new RegExp('id=' + playerId + '"');
           if (playerIdPattern.test(entryHtml)) {
             if (allSame) {
-              // Co-op: check if the shared label is a win label
-              if (isWinLabel(entryLabels[0])) {
-                outcome = 'win';
-              }
-            } else if (i === 0) {
-              // Competitive: first entry = winner
-              outcome = 'win';
+              outcome = coopOutcomeFromLabel(entryLabels[0]);
+            } else {
+              outcome = i === 0 ? 'win' : 'loss';
             }
             break;
           }
@@ -244,10 +227,7 @@ function BGAScraper(fetchFn, tokenOverride) {
 /**
  * Check if a co-op label indicates a win.
  * Only used when all players share the same label (co-op game).
- * We check if the label does NOT start with a digit (which would indicate
- * a ranked position like "1er"), and matches known win words.
  * BGA co-op results use simple words: Winner/Gagnant/Ganador/Gewinner/etc.
- * If we can't tell, default to "loss" (safe default).
  * @param {string} label - The shared label text
  * @returns {boolean} True if the label indicates a win
  */
@@ -275,6 +255,45 @@ function isWinLabel(label) {
 }
 
 /**
+ * Check if a co-op label indicates a loss.
+ * @param {string} label - The shared label text
+ * @returns {boolean} True if the label indicates a loss
+ */
+function isLossLabel(label) {
+  const lower = label.toLowerCase();
+  const lossWords = [
+    'loser',
+    'perdant',
+    'perdedor',
+    'verlierer',
+    'perdente',
+    'verliezer',
+    'przegrany',
+    'проигравший',
+    'poražený',
+    'vesztes',
+    '패자',
+    '败者',
+    '敗者',
+    'kaybeden',
+  ];
+  return lossWords.some((w) => lower.includes(w));
+}
+
+/**
+ * Resolve the outcome for a co-op game from the shared label.
+ * Returns null when the label matches neither win nor loss words — the source
+ * isn't explicit, so we refuse to guess.
+ * @param {string} label - The shared label text
+ * @returns {'win'|'loss'|null}
+ */
+function coopOutcomeFromLabel(label) {
+  if (isWinLabel(label)) return 'win';
+  if (isLossLabel(label)) return 'loss';
+  return null;
+}
+
+/**
  * Extract the rank/status label from a score entry's text.
  * BGA entries look like "Gagnant - PlayerName - 5" or "1er - PlayerName - 42".
  * The label is the text before the first " - " separator, trimmed.
@@ -293,9 +312,11 @@ if (typeof window !== 'undefined') {
   window.BGAScraper = BGAScraper;
   window.extractLabel = extractLabel;
   window.isWinLabel = isWinLabel;
+  window.isLossLabel = isLossLabel;
+  window.coopOutcomeFromLabel = coopOutcomeFromLabel;
 }
 
 // Export for Node.js/Jest tests (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BGAScraper, extractLabel, isWinLabel };
+  module.exports = { BGAScraper, extractLabel, isWinLabel, isLossLabel, coopOutcomeFromLabel };
 }

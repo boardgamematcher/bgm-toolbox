@@ -198,13 +198,20 @@ async function postYucataPlays(plays) {
   const apiUrl = storage.apiUrl || BGM_BASE_URL;
   const CHUNK_SIZE = 200;
 
-  const allPlays = plays.map((play) => ({
-    bgg_id: play.boardgame_id,
-    gameName: play.gameName,
-    played_at: play.played_at,
-    player_count: play.player_count,
-    outcome: play.outcome,
-  }));
+  // Omit outcome when the scraper couldn't determine it — the server records
+  // NULL rather than a bogus 'loss'. See BGM-812 / BGM-810.
+  const allPlays = plays.map((play) => {
+    const payload = {
+      bgg_id: play.boardgame_id,
+      gameName: play.gameName,
+      played_at: play.played_at,
+      player_count: play.player_count,
+    };
+    if (play.outcome === 'win' || play.outcome === 'loss' || play.outcome === 'draw') {
+      payload.outcome = play.outcome;
+    }
+    return payload;
+  });
 
   const allPosted = [];
   const allSkipped = [];

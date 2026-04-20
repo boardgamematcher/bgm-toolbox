@@ -1,5 +1,11 @@
 const { describe, test, expect } = require('@jest/globals');
-const { BGAScraper, extractLabel, isWinLabel } = require('../src/content/bga-scraper.js');
+const {
+  BGAScraper,
+  extractLabel,
+  isWinLabel,
+  isLossLabel,
+  coopOutcomeFromLabel,
+} = require('../src/content/bga-scraper.js');
 
 describe('BGAScraper', () => {
   describe('extractLabel', () => {
@@ -51,6 +57,38 @@ describe('BGAScraper', () => {
 
     test('rejects unknown labels (safe default)', () => {
       expect(isWinLabel('何か')).toBe(false);
+    });
+  });
+
+  describe('isLossLabel', () => {
+    test('detects French "Perdant"', () => {
+      expect(isLossLabel('Perdant')).toBe(true);
+    });
+
+    test('detects English "Loser"', () => {
+      expect(isLossLabel('Loser')).toBe(true);
+    });
+
+    test('rejects win labels', () => {
+      expect(isLossLabel('Gagnant')).toBe(false);
+    });
+
+    test('rejects unknown labels', () => {
+      expect(isLossLabel('何か')).toBe(false);
+    });
+  });
+
+  describe('coopOutcomeFromLabel', () => {
+    test('win word resolves to "win"', () => {
+      expect(coopOutcomeFromLabel('Winner')).toBe('win');
+    });
+
+    test('loss word resolves to "loss"', () => {
+      expect(coopOutcomeFromLabel('Perdant')).toBe('loss');
+    });
+
+    test('unknown label resolves to null (no guessing)', () => {
+      expect(coopOutcomeFromLabel('???')).toBeNull();
     });
   });
 
@@ -191,11 +229,39 @@ describe('BGAScraper', () => {
       expect(result.outcome).toBe('loss');
     });
 
-    test('handles empty HTML gracefully', () => {
+    test('handles empty HTML gracefully (outcome null, not loss)', () => {
       const result = scraper.parseResultHtml('', playerId);
       expect(result.gameName).toBe('');
       expect(result.playerCount).toBe(0);
-      expect(result.outcome).toBe('loss');
+      expect(result.outcome).toBeNull();
+    });
+
+    test('returns null outcome when current player is not in the entries', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">1er - <a href="player?id=111" class="playername">A</a></div>
+          <div class="board-score-entry">2e - <a href="player?id=222" class="playername">B</a></div>
+        </div>
+      `;
+      const result = scraper.parseResultHtml(html, '999');
+      expect(result.outcome).toBeNull();
+    });
+
+    test('returns null outcome for co-op with unknown shared label', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">MysteryCoop</span></a>:
+        <div>
+          <div class="board-score-entry">
+            ??? - <a href="player?id=84147370" class="playername">Me</a> - 0
+          </div>
+          <div class="board-score-entry">
+            ??? - <a href="player?id=99999" class="playername">Other</a> - 0
+          </div>
+        </div>
+      `;
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBeNull();
     });
   });
 

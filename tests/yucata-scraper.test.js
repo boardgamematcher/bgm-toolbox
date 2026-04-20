@@ -64,7 +64,7 @@ describe('YucataScraper', () => {
     expect(plays).toHaveLength(1);
   });
 
-  test('converts FinalPosition 1 to win and others to loss', () => {
+  test('converts FinalPosition 1 to win and other ranks to loss', () => {
     const scraper = YucataScraper();
     const plays = scraper.parseDataTableRows([
       { GameTypeId: 1, GameTypeName: "A", FinishedOnString: "01.01.2026", NumPlayers: 4, FinalPosition: 1 },
@@ -74,5 +74,17 @@ describe('YucataScraper', () => {
     expect(plays[0].outcome).toBe("win");
     expect(plays[1].outcome).toBe("loss");
     expect(plays[2].outcome).toBe("loss");
+  });
+
+  test('returns null outcome when FinalPosition is missing or 0 (not loss)', () => {
+    const scraper = YucataScraper();
+    const plays = scraper.parseDataTableRows([
+      { GameTypeId: 1, GameTypeName: "Solo", FinishedOnString: "01.01.2026", NumPlayers: 1, FinalPosition: 0 },
+      { GameTypeId: 2, GameTypeName: "Unknown", FinishedOnString: "01.01.2026", NumPlayers: 2 },
+      { GameTypeId: 3, GameTypeName: "Null", FinishedOnString: "01.01.2026", NumPlayers: 2, FinalPosition: null },
+    ]);
+    expect(plays[0].outcome).toBeNull();
+    expect(plays[1].outcome).toBeNull();
+    expect(plays[2].outcome).toBeNull();
   });
 });

@@ -26,15 +26,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 /**
- * Validate play outcome value
- * @param {string} outcome - The outcome to validate
- * @returns {boolean} True if outcome is valid
- * @description Valid outcomes are: 'win', 'loss', 'draw'. Yucata outcomes are normalized
- * to lowercase during scraping, so we check for these exact values.
+ * Validate play outcome value.
+ * Accepts 'win', 'loss', 'draw', or null/undefined (unknown — will be sent as
+ * a missing field, letting the server store NULL). Any other value is invalid
+ * and causes the play to be skipped to avoid poisoning the batch endpoint.
+ * @param {string|null|undefined} outcome
+ * @returns {boolean}
  */
 function isValidOutcome(outcome) {
-  const validOutcomes = ['win', 'loss', 'draw'];
-  return validOutcomes.includes(outcome);
+  if (outcome === null || outcome === undefined) return true;
+  return ['win', 'loss', 'draw'].includes(outcome);
 }
 
 /**
