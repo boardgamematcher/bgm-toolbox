@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "BGM Toolbox — BoardGameMatcher Companion",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Your board game companion: extract games from shops, log plays, sync collections — all connected to BoardGameMatcher.com",
   "permissions": [
     "activeTab",
@@ -12,7 +12,8 @@
   ],
   "host_permissions": [
     "https://boardgamematcher.com/*",
-    "http://localhost:8000/*"
+    "https://boardgamearena.com/*",
+    "https://en.boardgamearena.com/*"
   ],
   "content_security_policy": {
     "extension_pages": "script-src 'self'; style-src 'self' 'unsafe-inline'"
@@ -34,18 +35,48 @@
       "128": "icons/icon128.png"
     }
   },
-  "content_scripts": [{
-    "matches": ["<all_urls>"],
-    "js": ["src/lib/pattern-matcher.js", "src/content/content-script.js"]
-  }],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/lib/pattern-matcher.js", "src/content/content-script.js"]
+    },
+    {
+      "matches": ["https://www.yucata.de/*"],
+      "js": [
+        "src/lib/yucata-mapper.js",
+        "src/content/yucata-scraper.js",
+        "src/content/yucata-listener.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://boardgamearena.com/*",
+        "https://en.boardgamearena.com/*"
+      ],
+      "js": [
+        "src/content/bga-scraper.js",
+        "src/content/bga-listener.js"
+      ]
+    }
+  ],
   "options_page": "src/options/options.html",
   "icons": {
     "16": "icons/icon16.png",
     "48": "icons/icon48.png",
     "128": "icons/icon128.png"
   },
-  "web_accessible_resources": [{
-    "resources": ["patterns/built-in.json"],
-    "matches": ["<all_urls>"]
-  }]
+  "web_accessible_resources": [
+    {
+      "resources": ["patterns/built-in.json"],
+      "matches": ["<all_urls>"]
+    },
+    {
+      "resources": ["patterns/yucata-mapping.json", "src/content/yucata-page-extract.js"],
+      "matches": ["https://www.yucata.de/*"]
+    },
+    {
+      "resources": ["patterns/bga-mapping.json"],
+      "matches": ["https://boardgamearena.com/*", "https://en.boardgamearena.com/*"]
+    }
+  ]
 }

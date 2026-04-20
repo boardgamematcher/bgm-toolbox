@@ -6,6 +6,7 @@ A cross-browser extension (Chrome/Firefox) for extracting board game names from 
 
 - Extract board game names from supported sites with one click
 - Copy results directly to clipboard
+- Import play history from Yucata.de to power badge system and statistics
 - Built-in patterns for popular board game sites (Knapix, Amazon, Philibert)
 - Add custom extraction patterns for any website
 - Import/export custom patterns
@@ -43,6 +44,16 @@ A cross-browser extension (Chrome/Firefox) for extracting board game names from 
 4. Click "Extract Board Games"
 5. Game names are copied to your clipboard
 6. Paste anywhere to use the results
+
+### Importing from Yucata
+
+1. Log into your Yucata account at [yucata.de](https://yucata.de)
+2. Navigate to your Game History page
+3. Click the Board Game Extractor icon in your toolbar
+4. A green "Yucata Import" panel appears (only visible on yucata.de)
+5. Click "Import Yucata Plays" to import your play history
+6. Status message shows how many plays were imported
+7. Your plays now appear in your BGM history with badge unlocks
 
 ### Adding Custom Patterns
 
@@ -103,13 +114,17 @@ Exclude: ^Sponsored, ^Advertisement
 
 ## Supported Sites
 
+### Game Extraction
 Currently includes built-in patterns for:
 
 - **Knapix** (knapix.com)
 - **Amazon** (amazon.com, amazon.fr)
 - **Philibert** (philibert.com)
 
-More sites coming soon! You can add your own via custom patterns.
+### Play History Import
+- **Yucata** (yucata.de) - Import your complete play history with automatic BGG ID mapping
+
+You can add your own extraction patterns via custom patterns. More sites coming soon!
 
 ## Development
 

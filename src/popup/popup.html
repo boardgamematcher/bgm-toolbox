@@ -78,6 +78,68 @@
             <a class="login-signup" id="signup-link" href="#">Create a free account &rarr;</a>
           </div>
         </div>
+
+        <!-- Yucata Import Panel (visible only on yucata.de) -->
+        <div
+          id="yucataPanel"
+          style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd"
+        >
+          <h3 style="margin-top: 0; font-size: 14px">Yucata Import</h3>
+          <p style="font-size: 12px; color: #666; margin: 5px 0">
+            Import your Yucata play history to unlock badges and track statistics. Your browser
+            keeps your data local—nothing is shared with Yucata.
+          </p>
+          <button
+            id="yucataImportBtn"
+            style="
+              width: 100%;
+              padding: 8px;
+              background: #4caf50;
+              color: white;
+              border: none;
+              border-radius: 4px;
+              cursor: pointer;
+              font-size: 12px;
+            "
+          >
+            Import Yucata Plays
+          </button>
+          <div
+            id="yucataStatus"
+            style="margin-top: 8px; font-size: 11px; text-align: center; min-height: 16px"
+          ></div>
+        </div>
+      </div>
+
+      <!-- BGA Import Panel (visible only on boardgamearena.com) -->
+      <div
+        id="bgaPanel"
+        style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd"
+      >
+        <h3 style="margin-top: 0; font-size: 14px">Board Game Arena Import</h3>
+        <p style="font-size: 12px; color: #666; margin: 5px 0">
+          Import your BGA play history to unlock badges and track statistics. Your browser keeps
+          your data local—nothing is shared with BGA.
+        </p>
+        <button
+          id="bgaImportBtn"
+          style="
+            width: 100%;
+            padding: 8px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+          "
+        >
+          Import BGA Plays
+        </button>
+        <div
+          id="bgaStatus"
+          style="margin-top: 8px; font-size: 11px; text-align: center; min-height: 16px"
+        ></div>
       </div>
 
       <!-- Message toast -->
@@ -92,5 +154,7 @@
     </div>
 
     <script src="popup.js"></script>
+    <script src="yucata-import.js"></script>
+    <script src="bga-import.js"></script>
   </body>
 </html>
