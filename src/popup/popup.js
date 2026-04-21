@@ -20,6 +20,7 @@ function setupEventListeners() {
   document.getElementById('theme-toggle-btn').addEventListener('click', toggleTheme);
   document.getElementById('login-btn').addEventListener('click', handleLogin);
   document.getElementById('signup-link').addEventListener('click', handleSignup);
+  document.getElementById('wishlist-input').addEventListener('input', handleWishlistInput);
 }
 
 // ── Auth ──
@@ -56,11 +57,13 @@ function setLoggedIn(user) {
   avatar.style.display = '';
 
   document.getElementById('card-login').style.display = 'none';
+  showWishlistCard(user);
 }
 
 function setLoggedOut() {
   document.getElementById('user-avatar').style.display = 'none';
   document.getElementById('card-login').style.display = '';
+  document.getElementById('card-wishlist').style.display = 'none';
 }
 
 function handleLogin() {
@@ -311,4 +314,168 @@ function showMessage(text, type) {
 
 function handleSettings() {
   chrome.runtime.openOptionsPage();
+}
+
+// ── Wishlist quick-add ──
+
+const WISHLIST_DEBOUNCE_MS = 250;
+const WISHLIST_MIN_QUERY = 2;
+let wishlistSearchTimer = null;
+let wishlistSearchAbort = null;
+let wishlistCount = null;
+
+function showWishlistCard(user) {
+  document.getElementById('card-wishlist').style.display = '';
+  const link = document.getElementById('wishlist-link');
+  if (user.username) {
+    link.href = `${BGM_BASE_URL}/collections/${encodeURIComponent(user.username)}?tab=wishlist`;
+  }
+  loadWishlistCount();
+}
+
+async function loadWishlistCount() {
+  try {
+    const response = await fetch(`${BGM_BASE_URL}/api/collections/me`, {
+      credentials: 'include',
+    });
+    if (!response.ok) return;
+    const data = await response.json();
+    const list = (data && data.collections && data.collections.wishlist) || [];
+    wishlistCount = list.length;
+    renderWishlistCount();
+  } catch (error) {
+    console.warn('Failed to load wishlist count:', error);
+  }
+}
+
+function renderWishlistCount() {
+  const el = document.getElementById('wishlist-count');
+  if (wishlistCount === null) {
+    el.textContent = '';
+  } else if (wishlistCount === 1) {
+    el.textContent = '1 game in your wishlist';
+  } else {
+    el.textContent = `${wishlistCount} games in your wishlist`;
+  }
+}
+
+function handleWishlistInput(event) {
+  const query = event.target.value.trim();
+  clearTimeout(wishlistSearchTimer);
+  if (wishlistSearchAbort) {
+    wishlistSearchAbort.abort();
+    wishlistSearchAbort = null;
+  }
+  if (query.length < WISHLIST_MIN_QUERY) {
+    clearWishlistResults();
+    return;
+  }
+  wishlistSearchTimer = setTimeout(() => searchWishlistGames(query), WISHLIST_DEBOUNCE_MS);
+}
+
+async function searchWishlistGames(query) {
+  wishlistSearchAbort = new AbortController();
+  try {
+    const response = await fetch(
+      `${BGM_BASE_URL}/api/games/search?q=${encodeURIComponent(query)}`,
+      { credentials: 'include', signal: wishlistSearchAbort.signal }
+    );
+    if (!response.ok) {
+      renderWishlistError("Couldn't search right now.");
+      return;
+    }
+    const data = await response.json();
+    renderWishlistResults(data.games || []);
+  } catch (error) {
+    if (error.name === 'AbortError') return;
+    console.warn('Wishlist search failed:', error);
+    renderWishlistError("Couldn't search right now.");
+  }
+}
+
+function clearWishlistResults() {
+  document.getElementById('wishlist-results').textContent = '';
+}
+
+function renderWishlistError(text) {
+  const container = document.getElementById('wishlist-results');
+  container.textContent = '';
+  const err = document.createElement('div');
+  err.className = 'wl-error';
+  err.textContent = text;
+  container.appendChild(err);
+}
+
+function renderWishlistResults(games) {
+  const container = document.getElementById('wishlist-results');
+  container.textContent = '';
+  if (!games.length) {
+    const empty = document.createElement('div');
+    empty.className = 'wl-error';
+    empty.textContent = 'No games found.';
+    container.appendChild(empty);
+    return;
+  }
+  for (const game of games) {
+    container.appendChild(buildWishlistRow(game));
+  }
+}
+
+function buildWishlistRow(game) {
+  const row = document.createElement('div');
+  row.className = 'wl-result';
+
+  const thumb = document.createElement('img');
+  thumb.className = 'wl-thumb';
+  thumb.alt = '';
+  if (game.image_url) {
+    thumb.src = game.image_url;
+    thumb.onerror = () => thumb.removeAttribute('src');
+  }
+
+  const info = document.createElement('div');
+  info.className = 'wl-info';
+  const name = document.createElement('div');
+  name.className = 'wl-name';
+  name.textContent = game.name;
+  const year = document.createElement('div');
+  year.className = 'wl-year';
+  if (game.year_published) year.textContent = String(game.year_published);
+  info.append(name, year);
+
+  const btn = document.createElement('button');
+  btn.className = 'wl-btn-add';
+  btn.type = 'button';
+  btn.textContent = '+ Wishlist';
+  btn.addEventListener('click', () => addToWishlist(game, row, btn));
+
+  row.append(thumb, info, btn);
+  return row;
+}
+
+async function addToWishlist(game, row, btn) {
+  btn.disabled = true;
+  try {
+    const response = await fetch(
+      `${BGM_BASE_URL}/api/collections/${encodeURIComponent(game.id)}/wishlist`,
+      { method: 'POST', credentials: 'include' }
+    );
+    if (!response.ok) {
+      btn.disabled = false;
+      btn.textContent = 'Try again';
+      return;
+    }
+    const marker = document.createElement('span');
+    marker.className = 'wl-btn-added';
+    marker.textContent = '✓ Added';
+    btn.replaceWith(marker);
+    if (wishlistCount !== null) {
+      wishlistCount += 1;
+      renderWishlistCount();
+    }
+  } catch (error) {
+    console.warn('Add to wishlist failed:', error);
+    btn.disabled = false;
+    btn.textContent = 'Try again';
+  }
 }

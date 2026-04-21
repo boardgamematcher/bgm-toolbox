@@ -367,6 +367,126 @@ body {
   opacity: 0.5;
 }
 
+/* ── Wishlist card ── */
+.wl-results {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.wl-results:empty {
+  display: none;
+}
+
+.wl-result {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px;
+  border-radius: var(--radius);
+  background: var(--bg-elevated);
+  transition: background var(--transition-fast);
+}
+
+.wl-result:hover {
+  background: var(--bg-hover);
+}
+
+.wl-thumb {
+  width: 36px;
+  height: 36px;
+  border-radius: 3px;
+  flex: none;
+  background: var(--bg-hover);
+  object-fit: cover;
+}
+
+.wl-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.wl-name {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.01em;
+}
+
+.wl-year {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+
+.wl-btn-add {
+  flex: none;
+  padding: 6px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--amber);
+  border: 1px solid var(--amber);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all var(--transition-fast);
+}
+
+.wl-btn-add:hover:not(:disabled) {
+  background: var(--amber);
+  color: var(--amber-on-btn);
+}
+
+.wl-btn-add:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wl-btn-added {
+  flex: none;
+  padding: 6px 10px;
+  font-size: 10.5px;
+  font-weight: 700;
+  border-radius: var(--radius);
+  background: rgba(0, 192, 48, 0.14);
+  color: var(--green);
+  border: 1px solid transparent;
+}
+
+.wl-error {
+  font-size: 11px;
+  color: var(--red);
+  padding: 6px 2px 0;
+}
+
+.wl-footer {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  gap: 8px;
+}
+
+.wl-count {
+  color: var(--text-muted);
+}
+
+.wl-link {
+  color: var(--amber);
+  font-weight: 700;
+  text-decoration: none;
+  margin-left: auto;
+}
+
+.wl-link:hover {
+  color: var(--amber-bright);
+}
+
 /* ── Message toast ── */
 .message {
   margin: 0 12px 8px;
