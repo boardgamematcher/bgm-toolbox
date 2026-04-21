@@ -54,6 +54,7 @@ function setLoggedIn(user) {
   const avatar = document.getElementById('user-avatar');
   const initial = (user.display_name || user.username || '?').charAt(0).toUpperCase();
   avatar.textContent = '';
+  avatar.classList.remove('has-image');
   if (user.avatar_url) {
     const img = document.createElement('img');
     const url = /^https?:\/\//i.test(user.avatar_url)
@@ -63,12 +64,14 @@ function setLoggedIn(user) {
     img.alt = '';
     img.addEventListener('error', () => {
       avatar.textContent = initial;
+      avatar.classList.remove('has-image');
     });
     avatar.appendChild(img);
+    avatar.classList.add('has-image');
   } else {
     avatar.textContent = initial;
   }
-  avatar.title = user.display_name || user.username || '';
+  avatar.title = `${user.display_name || user.username || ''} — view your BGM profile`;
   avatar.style.display = '';
   if (user.username) {
     avatar.dataset.profileUrl = `${BGM_BASE_URL}/users/${encodeURIComponent(user.username)}`;
@@ -77,6 +80,8 @@ function setLoggedIn(user) {
   }
 
   document.getElementById('card-login').style.display = 'none';
+  document.getElementById('card-teaser').style.display = 'none';
+  document.getElementById('banner-text').textContent = 'Open BoardGameMatcher.com';
   showWishlistCard(user);
 }
 
@@ -84,6 +89,8 @@ function setLoggedOut() {
   document.getElementById('user-avatar').style.display = 'none';
   document.getElementById('card-login').style.display = '';
   document.getElementById('card-wishlist').style.display = 'none';
+  document.getElementById('card-teaser').style.display = '';
+  document.getElementById('banner-text').textContent = 'Discover BoardGameMatcher.com';
 }
 
 function handleLogin() {
@@ -105,21 +112,19 @@ function loadTheme() {
 }
 
 function toggleTheme() {
-  const popup = document.getElementById('popup');
-  const isLight = popup.classList.contains('light');
+  const isLight = document.body.classList.contains('light');
   const newTheme = isLight ? 'dark' : 'light';
   chrome.storage.local.set({ theme: newTheme });
   applyTheme(newTheme);
 }
 
 function applyTheme(theme) {
-  const popup = document.getElementById('popup');
   const icon = document.getElementById('theme-icon');
   if (theme === 'light') {
-    popup.classList.add('light');
+    document.body.classList.add('light');
     icon.innerHTML = '&#9788;'; // sun
   } else {
-    popup.classList.remove('light');
+    document.body.classList.remove('light');
     icon.innerHTML = '&#9790;'; // moon
   }
 }

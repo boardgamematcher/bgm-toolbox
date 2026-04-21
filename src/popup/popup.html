@@ -89,7 +89,6 @@
         <!-- Login CTA card (shown when not authenticated) -->
         <div class="card login-card" id="card-login" style="display: none">
           <div class="login-card-inner">
-            <div class="login-icon">&#127922;</div>
             <h3 class="login-title">Get more from your games</h3>
             <p class="card-body-text">
               Log plays, track prices, sync your collection, find players near you.
@@ -99,6 +98,20 @@
             </button>
             <a class="login-signup" id="signup-link" href="#">Create a free account &rarr;</a>
           </div>
+        </div>
+
+        <!-- Feature teaser card (shown when not authenticated) -->
+        <div class="card teaser-card" id="card-teaser" style="display: none">
+          <div class="card-top">
+            <div class="card-title">A free BGM account unlocks</div>
+          </div>
+          <ul class="teaser-list">
+            <li><span class="teaser-dot"></span>Auto-log plays from BGA &amp; Yucata</li>
+            <li><span class="teaser-dot"></span>Build a wishlist with price alerts</li>
+            <li><span class="teaser-dot"></span>Sync your BoardGameGeek collection</li>
+            <li><span class="teaser-dot"></span>Track win rates &amp; play stats</li>
+            <li><span class="teaser-dot"></span>Find players who own games you want to play</li>
+          </ul>
         </div>
 
         <!-- Yucata Import Panel (visible only on yucata.de) -->
@@ -138,7 +151,7 @@
       <!-- Bottom banner -->
       <a class="powered-banner" href="https://boardgamematcher.com" target="_blank" rel="noopener">
         <div class="pb-logo">B</div>
-        <div class="pb-text">Open BoardGameMatcher.com</div>
+        <div class="pb-text" id="banner-text">Open BoardGameMatcher.com</div>
         <span class="pb-arrow">&rarr;</span>
       </a>
     </div>
