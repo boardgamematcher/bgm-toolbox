@@ -111,4 +111,21 @@ describe('YucataScraper', () => {
     ]);
     expect(plays[0].outcome).toBe("draw");
   });
+
+  test('drops Yucata "Secret Mystery Game" rows (GameTypeId === -1)', () => {
+    const scraper = YucataScraper();
+    const plays = scraper.parseDataTableRows([
+      mockDataTableRows[0],
+      {
+        GameTypeId: -1,
+        GameTypeName: 'Secret Mystery Game',
+        FinishedOnString: '10.04.2026',
+        NumPlayers: 2,
+        FinalPosition: 1,
+        RankingResult: 2,
+      },
+    ]);
+    expect(plays).toHaveLength(1);
+    expect(plays[0].gameName).toBe('Maori');
+  });
 });
