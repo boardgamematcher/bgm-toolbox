@@ -458,7 +458,12 @@ async function addToWishlist(game, row, btn) {
   try {
     const response = await fetch(
       `${BGM_BASE_URL}/api/collections/${encodeURIComponent(game.id)}/wishlist`,
-      { method: 'POST', credentials: 'include' }
+      {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: '{}',
+      }
     );
     if (!response.ok) {
       btn.disabled = false;
