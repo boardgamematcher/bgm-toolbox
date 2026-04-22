@@ -13,6 +13,7 @@ repos:
     rev: v9.27.0
     hooks:
       - id: eslint
+        args: ["--max-warnings=0"]
         files: ^src/.*\.js$
         additional_dependencies:
           - eslint@9.27.0
