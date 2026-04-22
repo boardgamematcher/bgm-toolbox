@@ -5,6 +5,7 @@ const {
   isWinLabel,
   isLossLabel,
   coopOutcomeFromLabel,
+  resolveOutcome,
 } = require('../src/content/bga-scraper.js');
 
 describe('BGAScraper', () => {
@@ -89,6 +90,55 @@ describe('BGAScraper', () => {
 
     test('unknown label resolves to null (no guessing)', () => {
       expect(coopOutcomeFromLabel('???')).toBeNull();
+    });
+  });
+
+  describe('resolveOutcome (unit)', () => {
+    test('empty labels → null', () => {
+      expect(resolveOutcome([], 0)).toBeNull();
+    });
+
+    test('playerIndex out of range → null', () => {
+      expect(resolveOutcome(['1ᵉʳ', '2ᵉ'], -1)).toBeNull();
+      expect(resolveOutcome(['1ᵉʳ', '2ᵉ'], 5)).toBeNull();
+    });
+
+    test('rank labels, player at sole top → win', () => {
+      expect(resolveOutcome(['1ᵉʳ', '2ᵉ'], 0)).toBe('win');
+    });
+
+    test('rank labels, player not at top → loss', () => {
+      expect(resolveOutcome(['1ᵉʳ', '2ᵉ'], 1)).toBe('loss');
+    });
+
+    test('rank labels, player tied at top → draw', () => {
+      expect(resolveOutcome(['1ᵉʳ', '1ᵉʳ'], 0)).toBe('draw');
+      expect(resolveOutcome(['1ᵉʳ', '1ᵉʳ'], 1)).toBe('draw');
+    });
+
+    test('rank labels, 4 players with 2 tied at top', () => {
+      const labels = ['1ᵉʳ', '1ᵉʳ', '3ᵉ', '4ᵉ'];
+      expect(resolveOutcome(labels, 0)).toBe('draw');
+      expect(resolveOutcome(labels, 1)).toBe('draw');
+      expect(resolveOutcome(labels, 2)).toBe('loss');
+      expect(resolveOutcome(labels, 3)).toBe('loss');
+    });
+
+    test('co-op labels all identical, win word → win', () => {
+      expect(resolveOutcome(['Gagnant', 'Gagnant'], 0)).toBe('win');
+    });
+
+    test('co-op labels all identical, loss word → loss', () => {
+      expect(resolveOutcome(['Perdant', 'Perdant'], 1)).toBe('loss');
+    });
+
+    test('co-op labels all identical, unknown word → null', () => {
+      expect(resolveOutcome(['???', '???'], 0)).toBeNull();
+    });
+
+    test('mixed non-rank labels fall back to position', () => {
+      expect(resolveOutcome(['승자', '2위'], 0)).toBe('win');
+      expect(resolveOutcome(['승자', '2위'], 1)).toBe('loss');
     });
   });
 
@@ -246,6 +296,77 @@ describe('BGAScraper', () => {
       `;
       const result = scraper.parseResultHtml(html, '999');
       expect(result.outcome).toBeNull();
+    });
+
+    test('detects draw when two players share the top rank label (BGA superscript)', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Tipperary</span></a>:
+        <div>
+          <div class="board-score-entry">
+            1ᵉʳ - <a href="player?id=84147370" class="playername">Me</a> - 80
+          </div>
+          <div class="board-score-entry">
+            1ᵉʳ - <a href="player?id=99999" class="playername">Other</a> - 80
+          </div>
+        </div>
+      `;
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('draw');
+    });
+
+    test('detects draw for both players tied at top, regardless of DOM order', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">K2</span></a>:
+        <div>
+          <div class="board-score-entry">
+            1ᵉʳ - <a href="player?id=11306915" class="playername">Other</a> - 30
+          </div>
+          <div class="board-score-entry">
+            1ᵉʳ - <a href="player?id=84147370" class="playername">Me</a> - 30
+          </div>
+        </div>
+      `;
+      const result = scraper.parseResultHtml(html, playerId);
+      expect(result.outcome).toBe('draw');
+    });
+
+    test('4 players, 2 tied at top: top players draw, others loss', () => {
+      const htmlMeAtTop = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">1ᵉʳ - <a href="player?id=84147370" class="playername">Me</a> - 10</div>
+          <div class="board-score-entry">1ᵉʳ - <a href="player?id=222" class="playername">B</a> - 10</div>
+          <div class="board-score-entry">3ᵉ - <a href="player?id=333" class="playername">C</a> - 7</div>
+          <div class="board-score-entry">4ᵉ - <a href="player?id=444" class="playername">D</a> - 5</div>
+        </div>
+      `;
+      expect(scraper.parseResultHtml(htmlMeAtTop, playerId).outcome).toBe('draw');
+
+      const htmlMeThird = htmlMeAtTop.replace('player?id=333', 'player?id=84147370-swap');
+      // swap player 'Me' into 3rd place by editing which row carries my id
+      const htmlMeInThird = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">1ᵉʳ - <a href="player?id=111" class="playername">A</a> - 10</div>
+          <div class="board-score-entry">1ᵉʳ - <a href="player?id=222" class="playername">B</a> - 10</div>
+          <div class="board-score-entry">3ᵉ - <a href="player?id=84147370" class="playername">Me</a> - 7</div>
+          <div class="board-score-entry">4ᵉ - <a href="player?id=444" class="playername">D</a> - 5</div>
+        </div>
+      `;
+      expect(scraper.parseResultHtml(htmlMeInThird, playerId).outcome).toBe('loss');
+      void htmlMeThird;
+    });
+
+    test('sole top-rank player still resolves to win even when non-tied labels appear later', () => {
+      const html = `
+        <a href="/table?table=1"><span class="gamename">Catan</span></a>:
+        <div>
+          <div class="board-score-entry">1ᵉʳ - <a href="player?id=84147370" class="playername">Me</a> - 30</div>
+          <div class="board-score-entry">2ᵉ - <a href="player?id=222" class="playername">B</a> - 20</div>
+          <div class="board-score-entry">2ᵉ - <a href="player?id=333" class="playername">C</a> - 20</div>
+        </div>
+      `;
+      expect(scraper.parseResultHtml(html, playerId).outcome).toBe('win');
     });
 
     test('returns null outcome for co-op with unknown shared label', () => {
