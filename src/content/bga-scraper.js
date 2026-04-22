@@ -31,9 +31,10 @@ function BGAScraper(fetchFn, tokenOverride) {
      * @param {string} html - HTML fragment from a BGA news item
      * @param {string} playerId - The current player's BGA ID
      * @returns {Object} Parsed play details { gameName, playerCount, outcome }
-     *   outcome is 'win' | 'loss' | null. null means the source didn't give us
-     *   enough to decide (co-op with unknown label, player not listed, empty
-     *   HTML). Never guess — downstream stores null rather than a false loss.
+     *   outcome is 'win' | 'loss' | 'draw' | null. null means the source didn't
+     *   give us enough to decide (co-op with unknown label, player not listed,
+     *   empty HTML). Never guess — downstream stores null rather than a false
+     *   loss.
      */
     parseResultHtml(html, playerId) {
       // Use DOMParser if available (browser), otherwise use regex fallback (tests)
@@ -44,73 +45,50 @@ function BGAScraper(fetchFn, tokenOverride) {
       if (typeof DOMParser !== 'undefined') {
         const doc = new DOMParser().parseFromString(html, 'text/html');
 
-        // Extract game name from .gamename span
         const gameNameEl = doc.querySelector('.gamename');
         gameName = gameNameEl ? gameNameEl.textContent.trim() : '';
 
-        // Count players from .board-score-entry divs
-        const scoreEntries = doc.querySelectorAll('.board-score-entry');
+        const scoreEntries = Array.from(doc.querySelectorAll('.board-score-entry'));
         playerCount = scoreEntries.length;
 
-        // Win detection strategy (language-independent, works across 42 BGA languages):
-        //
-        // Competitive games: entries are ordered by rank — first entry = winner.
-        //   Different labels per entry (e.g. "1er", "2e", "3e").
-        //   → Player at index 0 = 'win', any other index = 'loss' (explicit rank).
-        //
-        // Co-op games: all entries share the same label ("Gagnant"/"Perdant"/etc).
-        //   → Match the shared label against known win/loss word lists.
-        //     Unknown label = null (we cannot tell; do not guess).
-
-        // Collect all labels
-        const labels = Array.from(scoreEntries).map((e) => extractLabel(e.textContent));
-        const allSameLabel = labels.length > 0 && labels.every((l) => l === labels[0]);
-
-        scoreEntries.forEach((entry, index) => {
-          const playerLink = entry.querySelector('a.playername');
-          if (!playerLink) return;
-
+        const labels = scoreEntries.map((e) => extractLabel(e.textContent));
+        let playerIndex = -1;
+        for (let i = 0; i < scoreEntries.length; i++) {
+          const playerLink = scoreEntries[i].querySelector('a.playername');
+          if (!playerLink) continue;
           const href = playerLink.getAttribute('href') || '';
           const idMatch = href.match(/id=(\d+)/);
-          if (!idMatch || idMatch[1] !== String(playerId)) return;
-
-          if (allSameLabel) {
-            outcome = coopOutcomeFromLabel(labels[0]);
-          } else {
-            outcome = index === 0 ? 'win' : 'loss';
+          if (idMatch && idMatch[1] === String(playerId)) {
+            playerIndex = i;
+            break;
           }
-        });
+        }
+
+        outcome = resolveOutcome(labels, playerIndex);
       } else {
         // Regex fallback for Node.js/test environments
         const gameNameMatch = html.match(/<span class="gamename">([^<]+)<\/span>/);
         gameName = gameNameMatch ? gameNameMatch[1].trim() : '';
 
-        const scoreEntryMatches = html.match(/<div class="board-score-entry">/g);
-        playerCount = scoreEntryMatches ? scoreEntryMatches.length : 0;
-
-        // Collect all entries, then use position/label-based detection
         const entryRegex = /<div class="board-score-entry">([\s\S]*?)<\/div>/g;
         const entries = [];
         let entryMatch;
         while ((entryMatch = entryRegex.exec(html)) !== null) {
           entries.push(entryMatch[1]);
         }
+        playerCount = entries.length;
 
-        const entryLabels = entries.map((e) => extractLabel(e));
-        const allSame = entryLabels.length > 0 && entryLabels.every((l) => l === entryLabels[0]);
-
+        const labels = entries.map((e) => extractLabel(e));
+        const playerIdPattern = new RegExp('id=' + playerId + '"');
+        let playerIndex = -1;
         for (let i = 0; i < entries.length; i++) {
-          const entryHtml = entries[i];
-          const playerIdPattern = new RegExp('id=' + playerId + '"');
-          if (playerIdPattern.test(entryHtml)) {
-            if (allSame) {
-              outcome = coopOutcomeFromLabel(entryLabels[0]);
-            } else {
-              outcome = i === 0 ? 'win' : 'loss';
-            }
+          if (playerIdPattern.test(entries[i])) {
+            playerIndex = i;
             break;
           }
         }
+
+        outcome = resolveOutcome(labels, playerIndex);
       }
 
       return { gameName, playerCount, outcome };
@@ -225,6 +203,48 @@ function BGAScraper(fetchFn, tokenOverride) {
 }
 
 /**
+ * Resolve outcome for the current player from the label layout.
+ *
+ * BGA returns a score entry per player. Layout falls into two shapes:
+ *
+ *   - Competitive (rank labels contain a digit, e.g. "1ᵉʳ", "2ᵉ", "1st").
+ *     Entries are ordered by rank. The top label is whatever appears at
+ *     index 0. A tie for top shows the SAME top label on multiple entries.
+ *       player not at top label → 'loss'
+ *       player at top label, alone → 'win'
+ *       player at top label, shared → 'draw'
+ *
+ *   - Co-op (all entries share a non-rank word label, e.g. "Gagnant"/"Perdant").
+ *     Word-match the shared label; unknown label yields null (never guess).
+ *
+ * If labels mix rank-like and word-like forms (unusual), we fall back to
+ * position: index 0 wins, others lose. Empty labels or a player not found
+ * in any entry yields null.
+ *
+ * @param {string[]} labels
+ * @param {number} playerIndex - Index of current player's entry, or -1 if absent
+ * @returns {'win'|'loss'|'draw'|null}
+ */
+function resolveOutcome(labels, playerIndex) {
+  if (!labels.length || playerIndex < 0 || playerIndex >= labels.length) return null;
+
+  const topLabel = labels[0];
+  const topLooksLikeRank = /\d/.test(topLabel);
+
+  if (topLooksLikeRank) {
+    const playerLabel = labels[playerIndex];
+    if (playerLabel !== topLabel) return 'loss';
+    const topCount = labels.filter((l) => l === topLabel).length;
+    return topCount === 1 ? 'win' : 'draw';
+  }
+
+  const allSame = labels.every((l) => l === topLabel);
+  if (allSame) return coopOutcomeFromLabel(topLabel);
+
+  return playerIndex === 0 ? 'win' : 'loss';
+}
+
+/**
  * Check if a co-op label indicates a win.
  * Only used when all players share the same label (co-op game).
  * BGA co-op results use simple words: Winner/Gagnant/Ganador/Gewinner/etc.
@@ -314,9 +334,17 @@ if (typeof window !== 'undefined') {
   window.isWinLabel = isWinLabel;
   window.isLossLabel = isLossLabel;
   window.coopOutcomeFromLabel = coopOutcomeFromLabel;
+  window.resolveOutcome = resolveOutcome;
 }
 
 // Export for Node.js/Jest tests (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { BGAScraper, extractLabel, isWinLabel, isLossLabel, coopOutcomeFromLabel };
+  module.exports = {
+    BGAScraper,
+    extractLabel,
+    isWinLabel,
+    isLossLabel,
+    coopOutcomeFromLabel,
+    resolveOutcome,
+  };
 }
