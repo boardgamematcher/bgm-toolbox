@@ -64,6 +64,28 @@
           <p class="card-body-text" id="stats-text">No extractions yet</p>
         </div>
 
+        <!-- Wishlist quick-add card (shown when authenticated) -->
+        <div class="card wishlist-card" id="card-wishlist" style="display: none">
+          <div class="card-top">
+            <div class="card-title">Add a game to your wishlist</div>
+          </div>
+          <div class="quick-add-row">
+            <input
+              id="wishlist-input"
+              type="text"
+              placeholder="Search a board game..."
+              autocomplete="off"
+            />
+          </div>
+          <div class="wl-results" id="wishlist-results"></div>
+          <div class="wl-footer">
+            <span class="wl-count" id="wishlist-count"></span>
+            <a class="wl-link" id="wishlist-link" href="#" target="_blank" rel="noopener"
+              >View full wishlist &rarr;</a
+            >
+          </div>
+        </div>
+
         <!-- Login CTA card (shown when not authenticated) -->
         <div class="card login-card" id="card-login" style="display: none">
           <div class="login-card-inner">
