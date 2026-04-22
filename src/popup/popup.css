@@ -620,3 +620,21 @@ body {
 .light .context-pill.play-ctx {
   background: rgba(46, 122, 184, 0.1);
 }
+
+/* ── Import panel status text (Yucata / BGA) ── */
+.import-status {
+  margin-top: 8px;
+  min-height: 16px;
+  font-size: 13px;
+  text-align: center;
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+
+.import-status.is-error {
+  color: #ff6b6b;
+}
+
+.import-status.is-success {
+  color: #3cb371;
+}

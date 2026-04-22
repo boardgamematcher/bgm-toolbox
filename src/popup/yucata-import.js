@@ -18,19 +18,24 @@ chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
 const yucataImportBtn = document.getElementById('yucataImportBtn');
 const yucataStatus = document.getElementById('yucataStatus');
 
+function setStatus(text, variant) {
+  if (!yucataStatus) return;
+  yucataStatus.textContent = text;
+  yucataStatus.classList.remove('is-error', 'is-success');
+  if (variant) yucataStatus.classList.add(variant);
+}
+
 // Listen for progress updates from the service worker
 chrome.runtime.onMessage.addListener((message) => {
   if (message.action === 'yucataImportProgress' && yucataStatus) {
-    yucataStatus.textContent = `Sending plays to BGM... ${message.current}/${message.total}`;
-    yucataStatus.style.color = '#666';
+    setStatus(`Sending plays to BGM... ${message.current}/${message.total}`);
   }
 });
 
 if (yucataImportBtn) {
   yucataImportBtn.addEventListener('click', () => {
     yucataImportBtn.disabled = true;
-    yucataStatus.textContent = 'Fetching all plays from Yucata... please wait';
-    yucataStatus.style.color = '#666';
+    setStatus('Fetching all plays from Yucata... please wait');
 
     // Send message to content script
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -39,18 +44,15 @@ if (yucataImportBtn) {
 
         if (chrome.runtime.lastError || !response) {
           const msg = chrome.runtime.lastError?.message || 'No response from content script';
-          yucataStatus.textContent = `✗ Error: ${msg}`;
-          yucataStatus.style.color = 'red';
+          setStatus(`✗ Error: ${msg}`, 'is-error');
         } else if (response.success) {
           const { posted, skipped, duplicates } = response.data;
           const parts = [`✓ Imported ${posted} plays!`];
           if (duplicates > 0) parts.push(`${duplicates} duplicates skipped`);
           if (skipped > 0) parts.push(`${skipped} not found on BGM`);
-          yucataStatus.textContent = parts.join(' · ');
-          yucataStatus.style.color = 'green';
+          setStatus(parts.join(' · '), 'is-success');
         } else {
-          yucataStatus.textContent = `✗ Error: ${response.error}`;
-          yucataStatus.style.color = 'red';
+          setStatus(`✗ Error: ${response.error}`, 'is-error');
         }
 
         // Keep status visible (don't auto-clear)
