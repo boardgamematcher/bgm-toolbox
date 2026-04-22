@@ -1,6 +1,6 @@
 {
   "version": "2.0",
-  "lastUpdated": "2026-04-10",
+  "lastUpdated": "2026-04-22",
   "description": "Maps BGA game slugs to BoardGameGeek (BGG) objectid. Key is the BGA slug from image URL.",
   "mappings": {
     "1000": 42499,
@@ -355,6 +355,7 @@
     "elgrande": 93,
     "elongo": 336933,
     "elpasogwt": 431305,
+    "eightmastersrevenge": 147474,
     "emberleaf": 426513,
     "eminentdomain": 68425,
     "eminentdomainmicrocosm": 163640,
@@ -540,6 +541,7 @@
     "iwari": 270109,
     "iye": 437478,
     "jaipur": 54043,
+    "jekyllvshide": 297129,
     "jekyllvshyde": 297129,
     "jewelbox": 424198,
     "jokerball": 448482,
@@ -1162,6 +1164,7 @@
     "trike": 307379,
     "trio": 352515,
     "trk": 461819,
+    "trok": 461819,
     "troggu": 104902,
     "troyes": 73439,
     "troyesdice": 284584,
