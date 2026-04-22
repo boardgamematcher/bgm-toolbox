@@ -98,8 +98,9 @@ async function importBGAPlays() {
 
   // Step 5: Send to service worker for batch posting (uses bgg_id like Yucata)
   const response = await chrome.runtime.sendMessage({
-    action: 'postYucataPlays',
+    action: 'postPlays',
     plays: mappedPlays,
+    platformSlug: 'board-game-arena',
   });
 
   if (!response.success) {

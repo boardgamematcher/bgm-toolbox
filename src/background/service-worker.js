@@ -168,8 +168,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return true;
   }
 
-  if (message.action === 'postYucataPlays') {
-    postYucataPlays(message.plays)
+  if (message.action === 'postPlays') {
+    postPlays(message.plays, { platformSlug: message.platformSlug })
       .then((results) => sendResponse({ success: true, results }))
       .catch((error) => sendResponse({ success: false, error: error.message }));
     return true;
@@ -192,8 +192,9 @@ async function updateStats(stats) {
   }
 }
 
-// POST Yucata plays to BGM API in chunks to avoid server timeouts
-async function postYucataPlays(plays) {
+// POST plays to BGM API in chunks to avoid server timeouts.
+// platformSlug tags the batch with its source (e.g. "yucata", "board-game-arena").
+async function postPlays(plays, { platformSlug } = {}) {
   const storage = await chrome.storage.local.get('apiUrl');
   const apiUrl = storage.apiUrl || BGM_BASE_URL;
   const CHUNK_SIZE = 200;
@@ -228,10 +229,13 @@ async function postYucataPlays(plays) {
       })
       .catch(() => {});
 
+    const body = { plays: chunk };
+    if (platformSlug) body.digital_platform_slug = platformSlug;
+
     const response = await fetch(`${apiUrl}/api/plays/batch`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'X-BGM-Source': 'toolbox' },
-      body: JSON.stringify({ plays: chunk }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
