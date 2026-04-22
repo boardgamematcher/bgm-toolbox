@@ -21,6 +21,14 @@ function setupEventListeners() {
   document.getElementById('login-btn').addEventListener('click', handleLogin);
   document.getElementById('signup-link').addEventListener('click', handleSignup);
   document.getElementById('wishlist-input').addEventListener('input', handleWishlistInput);
+  document.getElementById('user-avatar').addEventListener('click', handleAvatarClick);
+}
+
+function handleAvatarClick(e) {
+  const url = e.currentTarget.dataset.profileUrl;
+  if (url) {
+    chrome.tabs.create({ url });
+  }
 }
 
 // ── Auth ──
@@ -44,17 +52,29 @@ async function checkAuth() {
 
 function setLoggedIn(user) {
   const avatar = document.getElementById('user-avatar');
+  const initial = (user.display_name || user.username || '?').charAt(0).toUpperCase();
   avatar.textContent = '';
   if (user.avatar_url) {
     const img = document.createElement('img');
-    img.src = user.avatar_url;
+    const url = /^https?:\/\//i.test(user.avatar_url)
+      ? user.avatar_url
+      : BGM_BASE_URL + (user.avatar_url.startsWith('/') ? '' : '/') + user.avatar_url;
+    img.src = url;
     img.alt = '';
+    img.addEventListener('error', () => {
+      avatar.textContent = initial;
+    });
     avatar.appendChild(img);
   } else {
-    avatar.textContent = (user.display_name || user.username || '?').charAt(0).toUpperCase();
+    avatar.textContent = initial;
   }
   avatar.title = user.display_name || user.username || '';
   avatar.style.display = '';
+  if (user.username) {
+    avatar.dataset.profileUrl = `${BGM_BASE_URL}/users/${encodeURIComponent(user.username)}`;
+  } else {
+    delete avatar.dataset.profileUrl;
+  }
 
   document.getElementById('card-login').style.display = 'none';
   showWishlistCard(user);
