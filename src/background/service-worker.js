@@ -199,15 +199,24 @@ async function postPlays(plays, { platformSlug } = {}) {
   const apiUrl = storage.apiUrl || BGM_BASE_URL;
   const CHUNK_SIZE = 200;
 
+  // Build the per-play payload. The game identifier coming from the mapping
+  // files is either a BGG integer id (most games) or a BGM-native boardgame
+  // UUID string (for BGA/Yucata-exclusive games that have no BGG entry — see
+  // BGM-812). The batch endpoint accepts either `bgg_id` or `boardgame_id`.
+  //
   // Omit outcome when the scraper couldn't determine it — the server records
   // NULL rather than a bogus 'loss'. See BGM-812 / BGM-810.
   const allPlays = plays.map((play) => {
     const payload = {
-      bgg_id: play.boardgame_id,
       gameName: play.gameName,
       played_at: play.played_at,
       player_count: play.player_count,
     };
+    if (typeof play.boardgame_id === 'number') {
+      payload.bgg_id = play.boardgame_id;
+    } else {
+      payload.boardgame_id = play.boardgame_id;
+    }
     if (play.outcome === 'win' || play.outcome === 'loss' || play.outcome === 'draw') {
       payload.outcome = play.outcome;
     }

@@ -1,7 +1,7 @@
 {
-  "version": "2.0",
-  "lastUpdated": "2026-04-10",
-  "description": "Maps BGA game slugs to BoardGameGeek (BGG) objectid. Key is the BGA slug from image URL.",
+  "version": "2.1",
+  "lastUpdated": "2026-04-22",
+  "description": "Maps BGA game slugs to a game identifier. Key is the BGA slug from the image URL. Value is either a BGG objectid (integer, preferred) or a BGM-native boardgame UUID string (used when the title has no BGG entry).",
   "mappings": {
     "1000": 42499,
     "101lematch": 340816,
@@ -360,6 +360,7 @@
     "eminentdomainmicrocosm": 163640,
     "enemyanemone": 391985,
     "envelopesofcash": 355467,
+    "epizodiak": "1b1b48c9-9c15-492a-b260-b42020e5e267",
     "eriantys": 341286,
     "eruption": 88594,
     "escapefromthehiddencastle": 444,
@@ -424,6 +425,7 @@
     "gaiaproject": 220308,
     "galacticcruise": 391137,
     "galacticera": 281676,
+    "gammelogic": "8beb7acb-1047-4e09-94fe-78c54961d457",
     "gangofdice": 366129,
     "gangsta": 282475,
     "gardennation": 341245,
