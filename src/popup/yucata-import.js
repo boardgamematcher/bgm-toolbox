@@ -27,7 +27,7 @@ function setStatus(text, variant) {
 
 // Listen for progress updates from the service worker
 chrome.runtime.onMessage.addListener((message) => {
-  if (message.action === 'yucataImportProgress' && yucataStatus) {
+  if (message.action === 'playsImportProgress' && yucataStatus) {
     setStatus(`Sending plays to BGM... ${message.current}/${message.total}`);
   }
 });

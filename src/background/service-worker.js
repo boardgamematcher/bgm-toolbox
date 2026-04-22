@@ -223,7 +223,7 @@ async function postPlays(plays, { platformSlug } = {}) {
     // Broadcast progress
     chrome.runtime
       .sendMessage({
-        action: 'yucataImportProgress',
+        action: 'playsImportProgress',
         current: Math.min(i + CHUNK_SIZE, allPlays.length),
         total: allPlays.length,
       })

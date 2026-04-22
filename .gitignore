@@ -15,3 +15,6 @@ Thumbs.db
 
 # Node modules (if we add build step later)
 node_modules/
+
+# Local Claude Code session state (scheduled tasks, worktrees, settings)
+.claude/
