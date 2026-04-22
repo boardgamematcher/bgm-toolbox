@@ -18,7 +18,10 @@ export default [
       },
     },
     rules: {
-      "no-unused-vars": ["warn", { argsIgnorePattern: "^_|^e$" }],
+      "no-unused-vars": [
+        "warn",
+        { argsIgnorePattern: "^_|^e$", caughtErrorsIgnorePattern: "^_" },
+      ],
       "no-console": "off",
       "no-redeclare": ["error", { builtinGlobals: false }],
     },
