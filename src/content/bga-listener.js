@@ -107,7 +107,7 @@ async function importBGAPlays() {
     throw new Error(response.error);
   }
 
-  const { posted, skipped, duplicates } = response.results;
+  const { posted, skipped } = response.results;
 
   return {
     scraped: plays.length,
