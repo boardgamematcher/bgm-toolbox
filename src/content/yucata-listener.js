@@ -89,7 +89,7 @@ async function importYucataPlays() {
   // Notify popup of progress
   chrome.runtime
     .sendMessage({
-      action: 'yucataImportProgress',
+      action: 'playsImportProgress',
       total: mappedPlays.length,
     })
     .catch(() => {});
