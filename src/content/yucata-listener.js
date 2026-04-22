@@ -96,8 +96,9 @@ async function importYucataPlays() {
 
   // Step 4: POST to BGM API via background service worker (avoids CORS)
   const response = await chrome.runtime.sendMessage({
-    action: 'postYucataPlays',
+    action: 'postPlays',
     plays: mappedPlays,
+    platformSlug: 'yucata',
   });
 
   if (!response.success) {
