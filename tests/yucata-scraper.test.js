@@ -87,4 +87,28 @@ describe('YucataScraper', () => {
     expect(plays[1].outcome).toBeNull();
     expect(plays[2].outcome).toBeNull();
   });
+
+  test('uses RankingResult to distinguish win / draw / loss', () => {
+    const scraper = YucataScraper();
+    const plays = scraper.parseDataTableRows([
+      // Sole first: RankingResult=2, FinalPosition=1 → win
+      { GameTypeId: 1, GameTypeName: "SoleFirst", FinishedOnString: "01.01.2026", NumPlayers: 2, FinalPosition: 1, RankingResult: 2 },
+      // Shared first: RankingResult=1, FinalPosition=1 → draw
+      { GameTypeId: 2, GameTypeName: "SharedFirst", FinishedOnString: "01.01.2026", NumPlayers: 2, FinalPosition: 1, RankingResult: 1 },
+      // Not first: RankingResult=0 → loss
+      { GameTypeId: 3, GameTypeName: "Lost", FinishedOnString: "01.01.2026", NumPlayers: 2, FinalPosition: 2, RankingResult: 0 },
+    ]);
+    expect(plays[0].outcome).toBe("win");
+    expect(plays[1].outcome).toBe("draw");
+    expect(plays[2].outcome).toBe("loss");
+  });
+
+  test('RankingResult takes precedence over FinalPosition when both present', () => {
+    const scraper = YucataScraper();
+    const plays = scraper.parseDataTableRows([
+      // FinalPosition alone would say "win", but RankingResult=1 means it was actually a draw
+      { GameTypeId: 1, GameTypeName: "Tie", FinishedOnString: "01.01.2026", NumPlayers: 2, FinalPosition: 1, RankingResult: 1 },
+    ]);
+    expect(plays[0].outcome).toBe("draw");
+  });
 });

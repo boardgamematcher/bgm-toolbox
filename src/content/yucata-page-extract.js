@@ -57,6 +57,7 @@
           FinishedOnString: row.FinishedOnString,
           NumPlayers: row.NumPlayers,
           FinalPosition: row.FinalPosition,
+          RankingResult: row.RankingResult,
         };
       });
       window.postMessage({ type: 'bgm-yucata-data', plays: plays }, '*');

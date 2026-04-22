@@ -25,12 +25,23 @@ function YucataScraper() {
           }
           const date = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
 
-          // FinalPosition is an explicit final rank from Yucata.
-          //   1         → 'win'
-          //   >=2       → 'loss' (explicit lower rank)
-          //   0/missing → null (unfinished, solo, or no group outcome — do not guess)
+          // Yucata's RankingResult explicitly distinguishes all three outcomes:
+          //   2 → 'win'  (sole first place)
+          //   1 → 'draw' (shared first place — both players have FinalPosition=1)
+          //   0 → 'loss'
+          // Present on every finished game in practice. Fall back to
+          // FinalPosition only if RankingResult is absent (defensive; not
+          // observed in production data). FinalPosition alone can't
+          // distinguish win from draw, so the fallback collapses draws into
+          // 'win' — acceptable only because it never fires.
           let outcome = null;
-          if (row.FinalPosition === 1) {
+          if (row.RankingResult === 2) {
+            outcome = 'win';
+          } else if (row.RankingResult === 1) {
+            outcome = 'draw';
+          } else if (row.RankingResult === 0) {
+            outcome = 'loss';
+          } else if (row.FinalPosition === 1) {
             outcome = 'win';
           } else if (typeof row.FinalPosition === 'number' && row.FinalPosition >= 2) {
             outcome = 'loss';
