@@ -102,66 +102,34 @@
         </div>
 
         <!-- Yucata Import Panel (visible only on yucata.de) -->
-        <div
-          id="yucataPanel"
-          style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd"
-        >
-          <h3 style="margin-top: 0; font-size: 14px">Yucata Import</h3>
-          <p style="font-size: 12px; color: #666; margin: 5px 0">
+        <div class="card" id="yucataPanel" style="display: none">
+          <div class="card-top">
+            <div class="card-title">Yucata Import</div>
+          </div>
+          <p class="card-body-text">
             Import your Yucata play history to unlock badges and track statistics. Your browser
             keeps your data local—nothing is shared with Yucata.
           </p>
-          <button
-            id="yucataImportBtn"
-            style="
-              width: 100%;
-              padding: 8px;
-              background: #4caf50;
-              color: white;
-              border: none;
-              border-radius: 4px;
-              cursor: pointer;
-              font-size: 12px;
-            "
-          >
-            Import Yucata Plays
-          </button>
-          <div
-            id="yucataStatus"
-            style="margin-top: 8px; font-size: 11px; text-align: center; min-height: 16px"
-          ></div>
+          <div class="extract-row" style="margin-top: 10px">
+            <button id="yucataImportBtn" class="btn-primary">Import Yucata Plays</button>
+          </div>
+          <div id="yucataStatus" class="import-status"></div>
         </div>
       </div>
 
       <!-- BGA Import Panel (visible only on boardgamearena.com) -->
-      <div
-        id="bgaPanel"
-        style="display: none; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ddd"
-      >
-        <h3 style="margin-top: 0; font-size: 14px">Board Game Arena Import</h3>
-        <p style="font-size: 12px; color: #666; margin: 5px 0">
+      <div class="card" id="bgaPanel" style="display: none">
+        <div class="card-top">
+          <div class="card-title">Board Game Arena Import</div>
+        </div>
+        <p class="card-body-text">
           Import your BGA play history to unlock badges and track statistics. Your browser keeps
           your data local—nothing is shared with BGA.
         </p>
-        <button
-          id="bgaImportBtn"
-          style="
-            width: 100%;
-            padding: 8px;
-            background: #4caf50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-          "
-        >
-          Import BGA Plays
-        </button>
-        <div
-          id="bgaStatus"
-          style="margin-top: 8px; font-size: 11px; text-align: center; min-height: 16px"
-        ></div>
+        <div class="extract-row" style="margin-top: 10px">
+          <button id="bgaImportBtn" class="btn-primary">Import BGA Plays</button>
+        </div>
+        <div id="bgaStatus" class="import-status"></div>
       </div>
 
       <!-- Message toast -->
