@@ -312,9 +312,13 @@ async function handleImport() {
         return;
       }
 
-      // Validate patterns
+      // Validate patterns: every pattern needs domain + name + either a CSS
+      // selector (DOM scrape) or a data_source descriptor (e.g. next_data).
       for (const pattern of imported) {
-        if (!pattern.domain || !pattern.name || !pattern.selector) {
+        const hasSelector = typeof pattern.selector === 'string';
+        const hasDataSource =
+          pattern.data_source === 'next_data' && pattern.next_data && pattern.next_data.items_path;
+        if (!pattern.domain || !pattern.name || (!hasSelector && !hasDataSource)) {
           alert('Invalid pattern format in imported file');
           return;
         }

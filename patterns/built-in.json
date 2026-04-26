@@ -2,6 +2,30 @@
   "$schema": "./schema.json",
   "profiles": [
     {
+      "data_source": "next_data",
+      "domain": "veepee.fr",
+      "filters": {
+        "deduplicate": true,
+        "exclude": []
+      },
+      "name": "Veepee Catalog",
+      "next_data": {
+        "fields": {
+          "currency": "pricing.currency.symbol",
+          "image": "medias[0].url",
+          "name": "name",
+          "price": "pricing.price.value",
+          "sale_price": "pricing.retailPrice.value"
+        },
+        "items_path": "props.initialState.CatalogItems.result.items",
+        "name_cleanup": {
+          "strip_suffix_pattern": "(\\s*[-–]\\s*(?:\\d+\\s*(?:pi[eè]ces?|pcs?|pezzi|piezas?|Teile|stuks|pieces?)|d[eè]s?\\s+\\d+\\s*ans?|[àa]\\s*partir\\s+de\\s+\\d+\\s*ans?|from\\s+\\d+\\s+years?|ab\\s+\\d+\\s+Jahren?|desde\\s+\\d+\\s+a[ñn]os?|da\\s+\\d+\\s+anni|vanaf\\s+\\d+\\s+jaar))+\\s*$"
+        }
+      },
+      "threshold": 0.8,
+      "url_pattern": "^https?://(?:www\\.veepee\\.(?:fr|de|es|it|at|lu|nl)|(?:fr|nl)\\.veepee\\.be|(?:es|it)\\.privalia\\.com)/[a-z]+/catalog/"
+    },
+    {
       "card_selector": "a.mam",
       "domain": "philibertnet.com",
       "filters": {
@@ -511,5 +535,5 @@
       "url_pattern": "spieletaxi\\.de"
     }
   ],
-  "version": "1.2.0"
+  "version": "1.3.0"
 }
