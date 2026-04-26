@@ -170,6 +170,10 @@ function setSupported(siteName) {
   document.getElementById('card-unsupported').style.display = 'none';
   document.getElementById('detected-site').textContent = siteName + ' detected';
   document.getElementById('extract-btn').disabled = false;
+  // Extract is the primary CTA when on a supported shop. Suppress the
+  // teaser pitch — the login card alone is enough sign-up nudge, and
+  // shop extraction does not require a BGM account.
+  document.getElementById('card-teaser').style.display = 'none';
 }
 
 function setUnsupported(domain) {
