@@ -71,6 +71,14 @@ const PatternMatcher = {
       return { valid: false, error: 'Pattern must have a name string' };
     }
 
+    // data_source patterns (e.g. next_data for Next.js apps) don't use a CSS selector
+    if (pattern.data_source === 'next_data') {
+      if (!pattern.next_data || !pattern.next_data.items_path) {
+        return { valid: false, error: 'next_data pattern must have next_data.items_path' };
+      }
+      return { valid: true };
+    }
+
     if (!pattern.selector || typeof pattern.selector !== 'string') {
       return { valid: false, error: 'Pattern must have a selector string' };
     }

@@ -181,6 +181,61 @@ function setUnsupported(domain) {
 }
 
 async function countGames(tabId, pattern) {
+  // Count items from a Next.js __NEXT_DATA__ payload (Veepee, etc.)
+  if (pattern.data_source === 'next_data') {
+    const itemsPath = pattern.next_data?.items_path;
+    if (!itemsPath) return;
+    const paths = Array.isArray(itemsPath) ? itemsPath : [itemsPath];
+    try {
+      const results = await chrome.scripting.executeScript({
+        target: { tabId },
+        func: (paths) => {
+          const script = document.getElementById('__NEXT_DATA__');
+          if (!script) return 0;
+          let data;
+          try {
+            data = JSON.parse(script.textContent || '');
+          } catch {
+            return 0;
+          }
+          const walk = (obj, path) => {
+            if (!path || obj == null) return undefined;
+            const parts = path.split('.');
+            let cur = obj;
+            for (const part of parts) {
+              const m = part.match(/^([^[\]]+)((?:\[\d+\])*)$/);
+              if (!m) return undefined;
+              cur = cur == null ? undefined : cur[m[1]];
+              if (m[2]) {
+                const idxs = m[2].match(/\d+/g) || [];
+                for (const idx of idxs) {
+                  if (!Array.isArray(cur)) return undefined;
+                  cur = cur[parseInt(idx, 10)];
+                }
+              }
+              if (cur === undefined) return undefined;
+            }
+            return cur;
+          };
+          let total = 0;
+          for (const p of paths) {
+            const items = walk(data, p);
+            if (Array.isArray(items)) total += items.length;
+          }
+          return total;
+        },
+        args: [paths],
+      });
+      const count = results?.[0]?.result;
+      if (count > 0) {
+        document.getElementById('extract-btn').textContent = `Extract ${count} games`;
+      }
+    } catch (_e) {
+      // Can't inject into this page (e.g. chrome:// URLs)
+    }
+    return;
+  }
+
   const selector = pattern.card_selector || pattern.selector;
   if (!selector) return;
   try {
