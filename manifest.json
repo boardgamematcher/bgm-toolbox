@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
   "name": "BGM Toolbox — BoardGameMatcher Companion",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "description": "Your board game companion: extract games from shops, log plays, sync collections — all connected to BoardGameMatcher.com",
+  "author": "BoardGameMatcher",
+  "homepage_url": "https://boardgamematcher.com",
   "permissions": [
     "activeTab",
-    "clipboardWrite",
     "contextMenus",
     "storage",
     "scripting"

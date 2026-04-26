@@ -1,211 +1,91 @@
-# Board Game Extractor
+# BGM Toolbox — BoardGameMatcher Companion
 
-A cross-browser extension (Chrome/Firefox) for extracting board game names from websites using configurable CSS selector patterns.
+Cross-browser extension (Chrome / Firefox / Edge) that connects board game shops, play platforms, and your collection on **[BoardGameMatcher.com](https://boardgamematcher.com)**.
 
-## Features
+## What it does
 
-- Extract board game names from supported sites with one click
-- Copy results directly to clipboard
-- Import play history from Yucata.de to power badge system and statistics
-- Built-in patterns for popular board game sites (Knapix, Amazon, Philibert)
-- Add custom extraction patterns for any website
-- Import/export custom patterns
-- Filter results with regex patterns
-- Clean, intuitive interface
+- **Shop deals** — on supported board game shops, click the toolbar icon to extract game names and prices, then match them against the BGM database.
+- **Play history** — on Board Game Arena and Yucata.de, import your past plays into your BGM profile in one click (game IDs auto-mapped to BGG).
+- **Wishlist** — quick-add games to your BGM wishlist directly from the popup.
+- **Custom patterns** — teach the extension a new shop with a CSS selector or a Next.js `__NEXT_DATA__` path.
+
+Built-in shop coverage includes Veepee (12 ccTLDs), Philibert, Knapix, Amazon, Cultura, Fnac, Esprit Jeu, Ludum, Le Passe-Temps, Okkazeo, Le Pion, Gamers Dream, Ludisphere, Ludifolie, CoolStuffInc, Miniature Market, BoardGameBliss, Zatu Games, GameNerdz, brettspielversand, Milan Spiele, Fantasywelt, Spiele-Offensive, Thalia, Kutami, Spieletaxi.
+
+Site patterns are maintained in the public [boardgamematcher/site-profiles](https://github.com/boardgamematcher/site-profiles) repo and update automatically (no extension release needed for new shops).
 
 ## Installation
 
-### Chrome
+### Chrome / Edge / Brave
 
-1. Download or clone this repository
-2. Open `chrome://extensions/` in Chrome
-3. Enable "Developer mode" (toggle in top right)
-4. Click "Load unpacked"
-5. Select the `bgm-extension` directory
-6. Extension icon will appear in your toolbar
+1. Clone this repository
+2. Open `chrome://extensions/`
+3. Enable **Developer mode** (top-right toggle)
+4. Click **Load unpacked** and select the repo directory
 
 ### Firefox
 
-1. Download or clone this repository
-2. Open `about:debugging#/runtime/this-firefox` in Firefox
-3. Click "Load Temporary Add-on"
-4. Navigate to the extension directory and select `manifest.json`
-5. Extension icon will appear in your toolbar
+1. Clone this repository
+2. Open `about:debugging#/runtime/this-firefox`
+3. Click **Load Temporary Add-on** and pick `manifest.json`
 
-**Note:** In Firefox, temporary extensions are removed when you close the browser. For permanent installation, the extension needs to be signed by Mozilla.
+> Firefox unloads temporary extensions on browser restart. For a persistent install, the AMO-signed build is needed.
 
 ## Usage
 
-### Basic Extraction
+**Extract from a shop:** open a supported shop's catalog page, click the toolbar icon, click **Extract Games**. Results land on `boardgamematcher.com/extract`.
 
-1. Navigate to a supported website (e.g., knapix.com)
-2. Click the Board Game Extractor icon in your toolbar
-3. Verify the site is supported (green badge)
-4. Click "Extract Board Games"
-5. Game names are copied to your clipboard
-6. Paste anywhere to use the results
+**Import BGA plays:** sign in at `boardgamearena.com`, navigate to your game stats page, click the toolbar icon, click **Import BGA Plays**.
 
-### Importing from Yucata
+**Import Yucata plays:** sign in at `yucata.de`, open your Game History, click the toolbar icon, click **Import Yucata Plays**.
 
-1. Log into your Yucata account at [yucata.de](https://yucata.de)
-2. Navigate to your Game History page
-3. Click the Board Game Extractor icon in your toolbar
-4. A green "Yucata Import" panel appears (only visible on yucata.de)
-5. Click "Import Yucata Plays" to import your play history
-6. Status message shows how many plays were imported
-7. Your plays now appear in your BGM history with badge unlocks
+**Add a custom shop:** Settings → Custom Patterns → Add New Pattern. For Next.js shops, use Import JSON with a `data_source: "next_data"` profile.
 
-### Adding Custom Patterns
+## Privacy & data flow
 
-1. Click the extension icon
-2. Click "Settings"
-3. Navigate to "Custom Patterns" tab
-4. Click "Add New Pattern"
-5. Fill in the form:
-   - **Domain**: Website domain (e.g., "example.com")
-   - **Display Name**: Friendly name for the site
-   - **CSS Selector**: Pattern to find game names (e.g., ".product-title")
-   - **Exclude Patterns** (optional): Regex to filter out unwanted results
-   - **Include Patterns** (optional): Regex to keep only matching results
-6. Click "Save Pattern"
+This extension **does** transmit data — that's the whole point. Specifically:
 
-### Pattern Examples
+- When you click **Extract**, the page's product list (game names, prices, image URLs) is sent to `boardgamematcher.com/api/extract/extension`. Source URL and domain are included.
+- When you import plays, the parsed play list (game id, date, player count, outcome) is sent to `boardgamematcher.com/api/plays/batch`.
+- Auth and wishlist actions use your `boardgamematcher.com` session cookie.
 
-**Simple selector:**
-```
-Selector: h3
-```
-
-**Class-based selector:**
-```
-Selector: .product-name
-```
-
-**Nested selector:**
-```
-Selector: article .game-title
-```
-
-**With filters:**
-```
-Selector: .product h2
-Exclude: ^Sponsored, ^Advertisement
-```
-
-### Import/Export Patterns
-
-**Export:**
-1. Open Settings → Custom Patterns
-2. Click "Export JSON"
-3. Save the downloaded file
-
-**Import:**
-1. Open Settings → Custom Patterns
-2. Click "Import JSON"
-3. Select a previously exported JSON file
-4. Patterns are added to your collection
-
-### Suggesting New Sites
-
-1. Click the extension icon
-2. Click "Suggest a Site"
-3. Your email client opens with a pre-filled template
-4. Fill in the site details and send
-
-## Supported Sites
-
-### Game Extraction
-Currently includes built-in patterns for:
-
-- **Knapix** (knapix.com)
-- **Amazon** (amazon.com, amazon.fr)
-- **Philibert** (philibert.com)
-
-### Play History Import
-- **Yucata** (yucata.de) - Import your complete play history with automatic BGG ID mapping
-
-You can add your own extraction patterns via custom patterns. More sites coming soon!
+It does **not** transmit anything to third parties. Custom patterns and stats are stored locally in `chrome.storage.local`. See [`PRIVACY.md`](PRIVACY.md) for the full disclosure.
 
 ## Development
 
-### Project Structure
-
 ```
-bgm-extension/
-├── manifest.json          # Extension manifest
+toolbox-extension/
+├── manifest.json
 ├── src/
-│   ├── background/        # Service worker
-│   ├── content/           # Content scripts
-│   ├── popup/             # Extension popup UI
-│   ├── options/           # Settings page
-│   └── lib/               # Shared utilities
-├── patterns/              # Built-in site patterns
-├── icons/                 # Extension icons
-└── docs/                  # Documentation
+│   ├── background/        # service worker
+│   ├── content/           # content scripts (BGA, Yucata, generic)
+│   ├── popup/             # toolbar popup UI
+│   ├── options/           # settings page
+│   └── lib/               # shared utilities
+├── patterns/              # bundled fallback profiles + ID mappings
+├── icons/
+└── tests/                 # jest (jsdom) — 108 tests
 ```
 
-### Tech Stack
+Stack: vanilla JS, WebExtensions Manifest V3, no build step. Jest + jsdom for tests, ESLint + Prettier for style.
 
-- Vanilla JavaScript (no build step required)
-- WebExtensions API (Manifest V3)
-- Chrome Storage API for persistence
+```bash
+npm ci
+npm test          # jest
+npm run lint      # eslint
+npm run format    # prettier --write
+```
 
-### Testing
+CI runs the same on every PR (`.github/workflows/test.yml`).
 
-See [docs/TESTING.md](docs/TESTING.md) for comprehensive testing guide.
+## Contributing
 
-### Contributing
-
-Contributions are welcome! To contribute:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly in both Chrome and Firefox
-5. Submit a pull request
-
-## Pattern Syntax Reference
-
-### CSS Selectors
-
-- `h3` - All h3 elements
-- `.class-name` - Elements with class
-- `#id-name` - Element with ID
-- `div > p` - Direct child
-- `div p` - Any descendant
-- `[data-attr]` - Elements with attribute
-
-### Regex Filters
-
-- `^Text` - Starts with "Text"
-- `Text$` - Ends with "Text"
-- `.*Text.*` - Contains "Text"
-- `\d+` - Contains numbers
-
-## Privacy
-
-This extension:
-- Works entirely locally (no external servers)
-- Only reads page content when you click "Extract"
-- Stores patterns only in your browser
-- Never transmits data to external services
+PRs welcome. To suggest a new shop, the cleanest path is a profile PR to [`site-profiles`](https://github.com/boardgamematcher/site-profiles) — no extension release required. For extension features and bugfixes, fork + branch + PR here.
 
 ## License
 
-MIT License - see LICENSE file for details
+MIT — see [LICENSE](LICENSE).
 
 ## Support
 
-- Report bugs: [GitHub Issues](https://github.com/yourusername/bgm-extension/issues)
-- Feature requests: [GitHub Issues](https://github.com/yourusername/bgm-extension/issues)
-- Questions: [GitHub Discussions](https://github.com/yourusername/bgm-extension/discussions)
-
-## Roadmap
-
-- [ ] Firefox Add-ons store submission
-- [ ] Chrome Web Store submission
-- [ ] Pattern testing playground
-- [ ] Export to multiple formats (CSV, JSON, etc.)
-- [ ] Website redirect feature
-- [ ] Pattern auto-update system
-- [ ] Browser sync for custom patterns
+- Issues / bugs / shop suggestions: [github.com/boardgamematcher/toolbox-extension/issues](https://github.com/boardgamematcher/toolbox-extension/issues)
+- Site patterns: [github.com/boardgamematcher/site-profiles](https://github.com/boardgamematcher/site-profiles)

@@ -49,10 +49,12 @@ function setupEventListeners() {
 // Load patterns from storage
 async function loadPatterns() {
   try {
-    // Load built-in patterns
+    // Load built-in patterns. The bundled JSON uses the key "profiles"
+    // (matching the shared site-profiles repo schema). Earlier code read
+    // "patterns", which silently produced an empty Supported Sites tab.
     const response = await fetch(chrome.runtime.getURL('patterns/built-in.json'));
     const data = await response.json();
-    builtInPatterns = data.patterns || [];
+    builtInPatterns = data.profiles || data.patterns || [];
 
     // Load custom patterns
     const result = await chrome.storage.local.get('customPatterns');
@@ -146,12 +148,29 @@ function createPatternCard(pattern, isCustom, index) {
 
   const details = document.createElement('div');
   details.className = 'pattern-details';
-  details.innerHTML = `
-    <div class="pattern-row">
-      <span class="pattern-label">Selector:</span>
-      <span class="pattern-value">${escapeHtml(pattern.selector)}</span>
-    </div>
-  `;
+  // data_source profiles (e.g. next_data) have no CSS selector — show the
+  // strategy + items_path instead so the card stays informative.
+  if (pattern.data_source === 'next_data') {
+    const itemsPath = pattern.next_data?.items_path;
+    const itemsPathStr = Array.isArray(itemsPath) ? itemsPath.join(' | ') : itemsPath || '';
+    details.innerHTML = `
+      <div class="pattern-row">
+        <span class="pattern-label">Strategy:</span>
+        <span class="pattern-value">__NEXT_DATA__</span>
+      </div>
+      <div class="pattern-row">
+        <span class="pattern-label">Items path:</span>
+        <span class="pattern-value">${escapeHtml(itemsPathStr)}</span>
+      </div>
+    `;
+  } else {
+    details.innerHTML = `
+      <div class="pattern-row">
+        <span class="pattern-label">Selector:</span>
+        <span class="pattern-value">${escapeHtml(pattern.selector || '')}</span>
+      </div>
+    `;
+  }
 
   if (pattern.filters) {
     if (pattern.filters.exclude && pattern.filters.exclude.length > 0) {
