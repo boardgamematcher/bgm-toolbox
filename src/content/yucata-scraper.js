@@ -18,6 +18,14 @@ function YucataScraper() {
             return null;
           }
 
+          // GameTypeId === -1 is Yucata's "Secret Mystery Game" — tournament
+          // plays with the game identity intentionally masked. No real game to
+          // map; drop them at the scraper so they never pollute imports or
+          // unmapped logs.
+          if (row.GameTypeId === -1) {
+            return null;
+          }
+
           // Convert DD.MM.YYYY to YYYY-MM-DD
           const dateParts = row.FinishedOnString.split('.');
           if (dateParts.length !== 3) {
