@@ -5,6 +5,12 @@ const PROFILES_CACHE_KEY = 'cachedProfiles';
 const PROFILES_CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
 const BGM_BASE_URL = 'https://boardgamematcher.com';
 
+// Verbose service-worker logs are off in shipped builds. Flip to `true`
+// locally when debugging pattern loading or cache behaviour. Errors and
+// warnings are always emitted regardless of this flag.
+const DEBUG = false;
+const debug = DEBUG ? console.log.bind(console) : () => {};
+
 let cachedPatterns = [];
 let isReloading = false;
 
@@ -13,7 +19,7 @@ reloadPatterns();
 
 // Clear profile cache on install/update so new profiles take effect
 chrome.runtime.onInstalled.addListener(async () => {
-  console.log('BGM Toolbox installed/updated — clearing profile cache');
+  debug('BGM Toolbox installed/updated — clearing profile cache');
   await chrome.storage.local.remove(PROFILES_CACHE_KEY);
   await reloadPatterns();
 
@@ -62,7 +68,7 @@ async function fetchSharedProfiles() {
     const cached = await chrome.storage.local.get(PROFILES_CACHE_KEY);
     const entry = cached[PROFILES_CACHE_KEY];
     if (entry && Date.now() - entry.timestamp < PROFILES_CACHE_TTL) {
-      console.log('Using cached profiles (%d profiles)', entry.profiles.length);
+      debug('Using cached profiles (%d profiles)', entry.profiles.length);
       return entry.profiles;
     }
   } catch (_e) {
@@ -78,7 +84,7 @@ async function fetchSharedProfiles() {
       await chrome.storage.local.set({
         [PROFILES_CACHE_KEY]: { profiles, timestamp: Date.now() },
       });
-      console.log('Fetched %d profiles from GitHub', profiles.length);
+      debug('Fetched %d profiles from GitHub', profiles.length);
       return profiles;
     }
   } catch (_e) {
@@ -111,7 +117,7 @@ async function reloadPatterns() {
     custom.forEach((p) => patternMap.set(p.domain + ':' + (p.name || 'custom'), p));
 
     cachedPatterns = Array.from(patternMap.values());
-    console.log('Loaded patterns:', cachedPatterns.length);
+    debug('Loaded patterns:', cachedPatterns.length);
   } catch (error) {
     console.error('Error loading patterns:', error);
     cachedPatterns = [];
