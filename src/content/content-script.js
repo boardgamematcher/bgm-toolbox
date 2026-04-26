@@ -1,8 +1,7 @@
-// Content script for extracting games from webpages
+// Content script for extracting games from webpages.
 // Listener is only registered in the extension context (chrome.runtime exists),
 // so the module can be required from Node tests without crashing.
 if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.onMessage) {
-  console.log('BGM Toolbox content script loaded');
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === 'extractGames') {
       const games = extractGames(message.pattern);
